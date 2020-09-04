@@ -13,13 +13,18 @@ public class PlayerController : MonoBehaviour
     //debug
     public Material dissolveMat; //this material should ONLY be on the player and absolutely nothing else.
 
+    public Material wallMat; //this should be the wall material. Should be a standard checker or something like that.
+    //hopefully not too much lag happens, but keep a profiler open just in case.
+
     float xInput, yInput;
     Vector3 moveDirection, forward, right, vel;
     CharacterController cc;
     bool isGrounded;
+    bool wallDecloakInProgress = false, cancelWallDecloak = false;
 
     private void Start()
     {
+        wallMat.SetFloat("Vector1_2F06040B", 1.00f);
         dissolveMat.SetFloat("Vector1_2F06040B", 0.0f); //needs to always start fully uncloaked!
         cc = GetComponent<CharacterController>();
         groundCheck.localPosition = new Vector3(0, -cc.bounds.extents.y, 0);
@@ -60,15 +65,29 @@ public class PlayerController : MonoBehaviour
             StopCoroutine(cloak());
             StartCoroutine(decloak());
         }
+
+        if (Input.GetMouseButtonDown(0))
+        {
+            if (wallDecloakInProgress)
+            {
+                cancelWallDecloak = true;
+            }
+            //StopCoroutine(WallReaction()); //if it was dissolving, this should reset it. But no! See, unity's StopCoroutine() function just doesnt work.
+            StartCoroutine(WallReaction());
+        }
     }
 
 
     IEnumerator cloak()
     {
-        cloaked = true;
+        
         float val = 0.01f;
         for(int i = 0; i < 100; i++)
         {
+            if(val >= 0.5f && !cloaked)
+            {
+                cloaked = true;
+            }
             yield return new WaitForSeconds(0.01f);
             dissolveMat.SetFloat("Vector1_2F06040B", val);
             val += 0.01f;
@@ -79,10 +98,13 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator decloak()
     {
-        cloaked = false;
         float val = 0.99f;
         for (int i = 0; i < 100; i++)
         {
+            if (val <= 0.49f && cloaked)
+            {
+                cloaked = false;
+            }
             yield return new WaitForSeconds(0.01f);
             dissolveMat.SetFloat("Vector1_2F06040B", val);
             val -= 0.01f;
@@ -90,6 +112,32 @@ public class PlayerController : MonoBehaviour
         
         yield return null;
 
+    }
+
+    IEnumerator WallReaction()
+    {
+        Debug.Log("Gunshot! " + Time.time);
+        wallMat.SetFloat("Vector1_2F06040B", 0.00f);
+        yield return new WaitForSeconds(2.5f);
+        float val = 0.01f;
+        wallDecloakInProgress = true;
+        for (int i = 0; i < 100; i++)
+        {
+            if (!cancelWallDecloak)
+            {
+                yield return new WaitForSeconds(0.02f);
+                wallMat.SetFloat("Vector1_2F06040B", val);
+                val += 0.01f;
+            }
+            else
+            {
+                wallMat.SetFloat("Vector1_2F06040B", 0.00f);
+                cancelWallDecloak = false;
+                break;
+            }
+            
+        }
+        wallDecloakInProgress = false;
     }
 
 
