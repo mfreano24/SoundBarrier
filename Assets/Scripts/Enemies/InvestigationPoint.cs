@@ -4,24 +4,52 @@ using UnityEngine;
 
 public class InvestigationPoint : MonoBehaviour
 {
-    // Start is called before the first frame update
+    List<EnemyAI> Attracts;
     void Start()
     {
-        foreach(GameObject e in GameObject.FindGameObjectsWithTag("Enemy"))
-        {
-            if(Vector3.Distance(e.transform.position, transform.position) < 15f)
-            {
-                e.GetComponent<EnemyAI>().NoiseAlert(transform.position);
-            }
-        }
-        StartCoroutine(dest());
+        
     }
 
-    IEnumerator dest()
+    public void AlertNearbyEnemies(float _soundVolume)
     {
-        //auto-destroy this.
+        StartCoroutine(destNoise());
+        Attracts = new List<EnemyAI>();
+        foreach (GameObject e in GameObject.FindGameObjectsWithTag("Enemy"))
+        {
+            if (Vector3.Distance(e.transform.position, transform.position) < _soundVolume)
+            {
+                Attracts.Add(e.GetComponent<EnemyAI>());
+                Attracts[Attracts.Count - 1].NoiseAlert(transform.position);
+            }
+        }
+
+    }
+
+    public void AlertSpecificEnemy(EnemyAI ea)
+    {
+        StartCoroutine(destSight(ea));
+        ea.NoiseAlert(transform.position);
+    }
+
+    IEnumerator destNoise()
+    {
+        //Use destNoise when a noise happens and potentially alerts lots of enemies.
         yield return new WaitForSeconds(5);
+        foreach(EnemyAI ea in Attracts)
+        {
+            ea.ResetIP(transform.position);
+        }
+
         Destroy(this.gameObject);
+    }
+
+    IEnumerator destSight(EnemyAI ea)
+    {
+        //Use destSight when an enemy loses sight of you and they need to go investigate.
+        yield return new WaitForSeconds(5);
+        ea.ResetIP(transform.position);
+        Destroy(this.gameObject);
+
     }
 
 }

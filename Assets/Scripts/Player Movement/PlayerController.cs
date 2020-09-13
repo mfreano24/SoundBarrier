@@ -91,11 +91,16 @@ public class PlayerController : MonoBehaviour
             StopCoroutine(decloak()); //if in the middle of a process, interrupt it and reverse. 
             //This will allow for quick decision making on the player's part if new information becomes apparent mid-cloak.
             StartCoroutine(cloak());
+            
         }
         else if (Input.GetMouseButtonDown(1) && !cooldown)
         {
             StopCoroutine(cloak());
             StartCoroutine(decloak());
+            IP_INST = Instantiate(investigationPoint, null).GetComponent<InvestigationPoint>();
+            IP_INST.transform.position = transform.position;
+            IP_INST.AlertNearbyEnemies(2f);
+             //duh
         }
 
         if (Input.GetMouseButtonDown(0))
@@ -116,6 +121,9 @@ public class PlayerController : MonoBehaviour
             }
 
             IP_INST = Instantiate(investigationPoint, null).GetComponent<InvestigationPoint>();
+            IP_INST.transform.position = transform.position;
+            IP_INST.AlertNearbyEnemies(10f);
+             //duh
 
         }
     }
@@ -123,15 +131,15 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator cloak()
     {
-
+        cloaked = true;
         float val = 0.01f;
         for (int i = 0; i < 100; i++)
         {
-            yield return new WaitForSeconds(0.01f);
+            yield return new WaitForSeconds(0.001f);
             dissolveMat.SetFloat("Vector1_2F06040B", val);
             val += 0.01f;
         }
-        cloaked = true;
+        
 
         yield return null;
     }
@@ -149,6 +157,14 @@ public class PlayerController : MonoBehaviour
 
         yield return null;
 
+    }
+
+    public void InvestigationPointCallback(EnemyAI e)
+    {
+        IP_INST = Instantiate(investigationPoint, null).GetComponent<InvestigationPoint>();
+        IP_INST.transform.position = transform.position;
+        IP_INST.AlertSpecificEnemy(e);
+        //duh
     }
 
     
