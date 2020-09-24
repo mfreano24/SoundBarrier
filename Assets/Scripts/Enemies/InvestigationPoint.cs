@@ -16,6 +16,7 @@ public class InvestigationPoint : MonoBehaviour
         Attracts = new List<EnemyAI>();
         foreach (GameObject e in GameObject.FindGameObjectsWithTag("Enemy"))
         {
+            Debug.Log("IP of distance " + _soundVolume + " on enemy " + e + ":\t" + Vector3.Distance(e.transform.position, transform.position));
             if (Vector3.Distance(e.transform.position, transform.position) < _soundVolume)
             {
                 Attracts.Add(e.GetComponent<EnemyAI>());

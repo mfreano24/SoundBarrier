@@ -19,16 +19,28 @@ public class PlayerController : MonoBehaviour
     public Material wallMat; //this should be the wall material. Should be a standard checker or something like that.
     //hopefully not too much lag happens, but keep a profiler open just in case.
 
-    public Slider cloakSlider;
+    public Image cloakSlider;
 
     float xInput, yInput;
     Vector3 moveDirection, forward, right, vel;
     CharacterController cc;
     bool isGrounded;
-    bool wallDecloakInProgress = false, cancelWallDecloak = false;
 
     [SerializeField]
     float cloakTimer = 5.0f;
+
+    public ParticleSystem muzzlePS;
+    public ParticleSystem cloakfizzle;
+    public Transform gunTransform;
+    [SerializeField]
+    bool canFire = true;
+    //public GameObject muzzleFlash;
+
+    public bool inSwitchRange = false;
+    FenceSwitchPanel currentFSP;
+
+    //List<InvestigationPoint> spawnedPoints; //this will be for optimization's sake, i guess. dont want too many of these spawning
+    public GameObject IPStorage;
 
     private void Start()
     {
@@ -69,12 +81,17 @@ public class PlayerController : MonoBehaviour
             if (cloakTimer < 0.15f)
             {
                 cooldown = true;
+                cloakfizzle.Play();
                 StartCoroutine(decloak());
             }
         }
         else if (cloakTimer < 5.00f)
         {
             cloakTimer += Time.deltaTime;
+            if(cloakTimer > 5.00f)
+            {
+                cloakTimer = 5.00f;
+            }
         }
         else if (!cloaked && cooldown)
         {
@@ -83,28 +100,31 @@ public class PlayerController : MonoBehaviour
         }
 
         //UPDATE VALUES
-        cloakSlider.value = cloakTimer * 100f;
+        cloakSlider.fillAmount = cloakTimer/5.0f;
 
         //INPUT
         if (Input.GetMouseButtonDown(1) && !cloaked && !cooldown)
         {
             StopCoroutine(decloak()); //if in the middle of a process, interrupt it and reverse. 
             //This will allow for quick decision making on the player's part if new information becomes apparent mid-cloak.
+            cloakfizzle.Play();
             StartCoroutine(cloak());
             
         }
         else if (Input.GetMouseButtonDown(1) && !cooldown)
         {
+            cloakfizzle.Play();
             StopCoroutine(cloak());
             StartCoroutine(decloak());
-            IP_INST = Instantiate(investigationPoint, null).GetComponent<InvestigationPoint>();
+            IP_INST = Instantiate(investigationPoint, IPStorage.transform).GetComponent<InvestigationPoint>();
             IP_INST.transform.position = transform.position;
-            IP_INST.AlertNearbyEnemies(2f);
+            IP_INST.AlertNearbyEnemies(5f);
              //duh
         }
 
-        if (Input.GetMouseButtonDown(0))
+        if (Input.GetMouseButtonDown(0) && canFire)
         {
+            StartCoroutine(muzzleFlash());
             RaycastHit hit;
             if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, groundLM))
             {
@@ -120,11 +140,20 @@ public class PlayerController : MonoBehaviour
                 Debug.Log("wall out of range(?)");
             }
 
-            IP_INST = Instantiate(investigationPoint, null).GetComponent<InvestigationPoint>();
+            IP_INST = Instantiate(investigationPoint, IPStorage.transform).GetComponent<InvestigationPoint>();
             IP_INST.transform.position = transform.position;
-            IP_INST.AlertNearbyEnemies(10f);
+            IP_INST.AlertNearbyEnemies(30f);
              //duh
 
+        }
+
+        if (Input.GetKeyDown(KeyCode.E))
+        {
+            //PLACEHOLDER INPUT FOR NOW
+            //WILL BE CALLED "INTERACT"
+
+            currentFSP.HandlePlayerInteraction();
+            
         }
     }
 
@@ -159,12 +188,51 @@ public class PlayerController : MonoBehaviour
 
     }
 
+    IEnumerator muzzleFlash()
+    {
+        canFire = false;
+        //77.5 z == Gun is up
+        //120 z == Gun is being reloaded.
+        muzzlePS.Play();
+        yield return new WaitForSeconds(0.25f);
+        for(int i = 1; i <= 10; i++)
+        {
+            gunTransform.localRotation = Quaternion.Euler(0, 84.64f, 77.5f + i * (120 - 77.5f) / 10);
+            yield return new WaitForSeconds(0.005f);
+        }
+
+        yield return new WaitForSeconds(0.3f);
+
+        for (int i = 1; i <= 10; i++)
+        {
+            gunTransform.localRotation = Quaternion.Euler(0, 84.64f, 120f - i * (120 - 77.5f) / 10);
+            yield return new WaitForSeconds(0.005f);
+        }
+        canFire = true;
+    }
+
     public void InvestigationPointCallback(EnemyAI e)
     {
-        IP_INST = Instantiate(investigationPoint, null).GetComponent<InvestigationPoint>();
+        IP_INST = Instantiate(investigationPoint, IPStorage.transform).GetComponent<InvestigationPoint>();
         IP_INST.transform.position = transform.position;
         IP_INST.AlertSpecificEnemy(e);
         //duh
+    }
+
+    public void FenceSwitchCallback(bool inRange, FenceSwitchPanel panel)
+    {
+        if (inRange)
+        {
+            Debug.Log("In range of the switch.");
+            currentFSP = panel;
+        }
+        else
+        {
+            Debug.Log("Out of range of the switch.");
+            currentFSP = null;
+        }
+
+        inSwitchRange = inRange;
     }
 
     

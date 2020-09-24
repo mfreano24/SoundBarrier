@@ -17,6 +17,8 @@ public class Wall : MonoBehaviour
 
     public GameObject clearWall; //make this the clear counterpart to the dissolve wall. Set it inactive initially, then set it active upon activating wallreaction.
     bool activated = false;
+
+    bool DEBUG_NoGlass = false;
     private void Start()
     {
         clearWall.SetActive(false);
@@ -25,6 +27,12 @@ public class Wall : MonoBehaviour
         mat = new Material(r.material); //copy the material and set it to just this block, creating an instance on startup so that each one can be modified
         //this should allow the player controller to change the "time" value individually.
         r.material = mat;
+        r.material.SetFloat("Vector1_2F06040B", 1.00f);
+
+        //DEBUG VARIABLES (SHOULD ALL BE FALSE IF TESTING REAL GAMEPLAY)
+        DEBUG_NoGlass = true;
+        r.material.SetFloat("Vector1_2F06040B", 0.00f); //comment out when not testing
+
     }
 
 
@@ -35,7 +43,11 @@ public class Wall : MonoBehaviour
         wallMat.SetFloat("Vector1_2F06040B", 0.00f);
         if (!activated)
         {
-            clearWall.SetActive(true);
+            if (!DEBUG_NoGlass)
+            {
+                clearWall.SetActive(true);
+            }
+            
             activated = true;
         }
         

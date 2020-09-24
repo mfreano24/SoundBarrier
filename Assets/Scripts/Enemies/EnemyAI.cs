@@ -1,14 +1,22 @@
 ﻿using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.UI;
+using System.Collections;
+
 
 public class EnemyAI : MonoBehaviour
 {
+    public float TESTGunDamage = 30.0f;
     public Transform player;
     public PlayerController pcScript;
+    public PlayerHealth pHealth;
     public LayerMask lm;
+    public ParticleSystem ps;
     public Vector3[] patrol; //assign this through the editor.
+    public Text textDebug;
     int patrolIndex;
 
+    bool shooting = false;
     Vector3 investigationPoint, NULL_IP; //assign to this point whenever a reason to investigate is triggered.
     NavMeshAgent nav;
 
@@ -64,19 +72,32 @@ public class EnemyAI : MonoBehaviour
         //transform.LookAt(patrol[patrolIndex] - transform.position);
         //TODO: Fix this? Please? I'm begging. God.
 
+        //debug
+        //PlayerInFront();
 
         Debug.DrawRay(transform.position,(2.0f * nav.velocity), Color.cyan);
-        transform.LookAt(transform.position + nav.velocity);
+        transform.LookAt(nav.velocity);
 
         switch (state)
         {
-            case 0: PatrolUpdate(); break;
-            case 1: InvestigateUpdate(); break;
-            case 2: AttackUpdate(); break;
+            case 0:
+                PatrolUpdate();
+                transform.LookAt(transform.position + nav.velocity);
+                break;
+            case 1:
+                InvestigateUpdate();
+                transform.LookAt(transform.position + nav.velocity);
+                break;
+            case 2:
+                AttackUpdate();
+                transform.LookAt(new Vector3(player.position.x, transform.position.y, player.position.z));
+                break;
         }
 
         if (PlayerVisible())
         {
+            shooting = true;
+            StartCoroutine(Shoot());
             state = 2;
             nav.SetDestination(transform.position); //dont move, just spray!
         }
@@ -118,22 +139,34 @@ public class EnemyAI : MonoBehaviour
     {
         if (!PlayerVisible())
         {
+            shooting = false;
             state = 1;
             pcScript.InvestigationPointCallback(this);
             
         }
         else
         {
-            Debug.Log("SHOOTING AT PLAYER!!!!!!!!!!!!!!!!!!!!");
+            Debug.Log("SHOOTING AT PLAYER");
+        }
+    }
+
+    IEnumerator Shoot()
+    {
+        while (shooting)
+        {
+            ps.Play();
+            pHealth.TakeDamage(TESTGunDamage);
+            yield return new WaitForSeconds(0.5f);
+
         }
     }
 
     bool PlayerVisible()
     {
-        //float angleRot = Vector3.Angle(transform.forward, player.position - transform.position);
-        
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, player.position - transform.position, out hit, Vector3.Distance(transform.position, player.position) + 0.01f, lm) || pcScript.cloaked)
+        if (Physics.Raycast(transform.position, player.position - transform.position, out hit, 
+            Vector3.Distance(transform.position, player.position) + 0.01f, lm) 
+            || pcScript.cloaked)
         {
             Debug.DrawRay(transform.position, hit.point - transform.position, Color.red);
             return false;
@@ -141,15 +174,17 @@ public class EnemyAI : MonoBehaviour
         else
         {
             Debug.DrawRay(transform.position, player.position - transform.position, Color.green);
-            return (true && PlayerInFront()); //efficiency, baby!
+            //return (true && PlayerInFront()); //efficiency? UN-COMMENT THIS
+            return false;
         }
         
     }
 
     bool PlayerInFront()
     {
-        Debug.Log(Vector3.Angle(transform.position + nav.velocity, player.position - transform.position));
-        return (Vector3.Angle(transform.position + nav.velocity, player.position - transform.position) < 90.0f);
+        //Debug.LogWarning(Vector3.Angle(transform.forward, player.position - transform.position) + "\t"+(Vector3.Angle(transform.forward, player.position - transform.position) < 90.0f ? "Player is in front" : "Player is behind"));
+        return (Vector3.Angle(transform.forward, player.position - transform.position) < 90.0f);
+        //this works, dont touch it! please. god.
     }
 
     public void NoiseAlert(Vector3 _investigationPoint)
