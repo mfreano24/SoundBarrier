@@ -7,6 +7,7 @@ using System.Collections;
 public class EnemyAI : MonoBehaviour
 {
     public float TESTGunDamage = 30.0f;
+    public float TESTSightAngle = 45.0f;
     public Transform player;
     public PlayerController pcScript;
     public PlayerHealth pHealth;
@@ -14,9 +15,12 @@ public class EnemyAI : MonoBehaviour
     public ParticleSystem ps;
     public Vector3[] patrol; //assign this through the editor.
     public Text textDebug;
+
+
     int patrolIndex;
 
     bool shooting = false;
+    bool DoubleShotBuffer = false;
     Vector3 investigationPoint, NULL_IP; //assign to this point whenever a reason to investigate is triggered.
     NavMeshAgent nav;
 
@@ -25,6 +29,8 @@ public class EnemyAI : MonoBehaviour
     // STATE 1 = "Investigation" - navmesh to the destination marker
     //                              Good way to implement this would be to have an investigation point spawned if the player is within some Vector3 Distance
     // STATE 2 = "Attack" - shoot! dont need to dodge because you do lots of damage.
+
+    SightlineVisualizer viz;
 
 
     void Awake()
@@ -65,6 +71,8 @@ public class EnemyAI : MonoBehaviour
 
     private void Start()
     {
+        viz = GetComponent<SightlineVisualizer>(); //these should be on the same object, right?
+        viz.CurrentColor = Color.green;
     }
 
     void Update()
@@ -93,13 +101,14 @@ public class EnemyAI : MonoBehaviour
                 transform.LookAt(new Vector3(player.position.x, transform.position.y, player.position.z));
                 break;
         }
-
-        if (PlayerVisible())
+        //Debug.Log("Enemy " + (PlayerVisible() ? "can see " : "cannot see ") + "the player. pHealth.dead == " + pHealth.dead + " and shooting == " + shooting);
+        if (PlayerVisible() && !pHealth.dead && !shooting)
         {
             shooting = true;
             StartCoroutine(Shoot());
             state = 2;
             nav.SetDestination(transform.position); //dont move, just spray!
+            viz.CurrentColor = Color.red;
         }
 
     }
@@ -131,6 +140,7 @@ public class EnemyAI : MonoBehaviour
         {
             state = 0; //if the player hasnt been seen and we're in this state still, just go back to patrolling.
             nav.SetDestination(GetClosestPatrolPoint());
+            viz.CurrentColor = Color.green;
         }
 
     }
@@ -139,26 +149,27 @@ public class EnemyAI : MonoBehaviour
     {
         if (!PlayerVisible())
         {
+            Debug.Log("Player isn't visible anymore.");
             shooting = false;
             state = 1;
+            viz.CurrentColor = Color.yellow;
             pcScript.InvestigationPointCallback(this);
             
-        }
-        else
-        {
-            Debug.Log("SHOOTING AT PLAYER");
         }
     }
 
     IEnumerator Shoot()
     {
-        while (shooting)
+        Debug.Log("SHOOTING AT PLAYER: doubleshot buffer? " + DoubleShotBuffer);
+        while (shooting && !pHealth.dead && !DoubleShotBuffer)
         {
+            DoubleShotBuffer = true;
             ps.Play();
             pHealth.TakeDamage(TESTGunDamage);
             yield return new WaitForSeconds(0.5f);
-
         }
+        DoubleShotBuffer = false;
+        shooting = false;
     }
 
     bool PlayerVisible()
@@ -174,8 +185,8 @@ public class EnemyAI : MonoBehaviour
         else
         {
             Debug.DrawRay(transform.position, player.position - transform.position, Color.green);
-            //return (true && PlayerInFront()); //efficiency? UN-COMMENT THIS
-            return false;
+            return PlayerInFront() && Vector3.Distance(transform.position, player.position) <= 20f; //efficiency, so that PIF only runs here.
+            //they dont need to have all seeing vision otherwise the player may have trouble seeing them when they get spotted!
         }
         
     }
@@ -183,7 +194,7 @@ public class EnemyAI : MonoBehaviour
     bool PlayerInFront()
     {
         //Debug.LogWarning(Vector3.Angle(transform.forward, player.position - transform.position) + "\t"+(Vector3.Angle(transform.forward, player.position - transform.position) < 90.0f ? "Player is in front" : "Player is behind"));
-        return (Vector3.Angle(transform.forward, player.position - transform.position) < 90.0f);
+        return (Vector3.Angle(transform.forward, player.position - transform.position) < 45.0f);
         //this works, dont touch it! please. god.
     }
 
@@ -193,8 +204,13 @@ public class EnemyAI : MonoBehaviour
         //if an investigation point already exists, just replace it, freshest sounds first!
         Debug.Log("New Investigation Point "+_investigationPoint+" has reached enemy.");
         investigationPoint = _investigationPoint;
-        state = 1;
-        nav.SetDestination(investigationPoint);
+        if(state != 2)
+        {
+            state = 1;
+            viz.CurrentColor = Color.yellow;
+            nav.SetDestination(investigationPoint);
+        }
+        
     }
 
     public void ResetIP(Vector3 _reset)
@@ -203,8 +219,13 @@ public class EnemyAI : MonoBehaviour
         {
             Debug.Log("Newest investigation point has been cleared!");
             investigationPoint = NULL_IP;
-            state = 0;
-            nav.SetDestination(GetClosestPatrolPoint());
+            if(state != 2)
+            {
+                state = 0;
+                viz.CurrentColor = Color.green;
+                nav.SetDestination(GetClosestPatrolPoint());
+            }
+            
         }
         else
         {

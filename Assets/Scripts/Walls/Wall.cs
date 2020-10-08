@@ -30,8 +30,8 @@ public class Wall : MonoBehaviour
         r.material.SetFloat("Vector1_2F06040B", 1.00f);
 
         //DEBUG VARIABLES (SHOULD ALL BE FALSE IF TESTING REAL GAMEPLAY)
-        DEBUG_NoGlass = true;
-        r.material.SetFloat("Vector1_2F06040B", 0.00f); //comment out when not testing
+        //DEBUG_NoGlass = true;
+        //r.material.SetFloat("Vector1_2F06040B", 0.00f); //comment out when not testing
 
     }
 

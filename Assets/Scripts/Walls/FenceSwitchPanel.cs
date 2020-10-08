@@ -11,12 +11,17 @@ public class FenceSwitchPanel : MonoBehaviour
 
     PlayerController pc;
 
+    Color fenceOn;
+
+    public MainUI mui;
+
     void Start()
     {
         r = GetComponent<Renderer>();
         pc = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
         fenceMat = fence.GetComponent<Renderer>().material;
         r.material.color = fenceMat.GetColor("_Color"); //set the color of this switch to the fence's electricity color!
+        fenceOn = r.material.color; //store the original color of the fence for later.
     }
 
     void Update()
@@ -26,6 +31,7 @@ public class FenceSwitchPanel : MonoBehaviour
 
     public void EnableFence()
     {
+        r.material.color = fenceOn;
         StartCoroutine(TurnOn());
     }
 
@@ -46,6 +52,7 @@ public class FenceSwitchPanel : MonoBehaviour
 
     public void DisableFence()
     {
+        r.material.color = Color.red;
         StartCoroutine(TurnOff());
     }
 
@@ -79,6 +86,7 @@ public class FenceSwitchPanel : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
+            mui.BringInNewButtonPrompt("E", "Press Button");
             pc.FenceSwitchCallback(true, this);
         }
     }
@@ -87,6 +95,7 @@ public class FenceSwitchPanel : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
+            mui.SlideButtonPromptOut();
             pc.FenceSwitchCallback(false, null);
         }
     }

@@ -4,6 +4,8 @@ using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
+    PlayerHealth phealth;
+
     public float playerSpeed, gravity = -9.81f;
     public Transform groundCheck;
     public float groundDist = 0.4f;
@@ -42,12 +44,15 @@ public class PlayerController : MonoBehaviour
     //List<InvestigationPoint> spawnedPoints; //this will be for optimization's sake, i guess. dont want too many of these spawning
     public GameObject IPStorage;
 
+
+    
     private void Start()
     {
         wallMat.SetFloat("Vector1_2F06040B", 1.00f);
         dissolveMat.SetFloat("Vector1_2F06040B", 0.0f); //needs to always start fully uncloaked!
         cc = GetComponent<CharacterController>();
         groundCheck.localPosition = new Vector3(0, -cc.bounds.extents.y, 0);
+        phealth = GetComponent<PlayerHealth>();
 
     }
 
@@ -56,22 +61,36 @@ public class PlayerController : MonoBehaviour
         //MOVEMENT
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDist, groundLM);
 
+        if (Input.GetKey(KeyCode.LeftShift))
+        {
+            playerSpeed = 0.3f;
+        }
+        else
+        {
+            playerSpeed = 0.15f;
+        }
+
+
         if (isGrounded && vel.y < 0)
         {
             vel.y = -2;
         }
-        xInput = Input.GetAxis("Horizontal");
-        yInput = Input.GetAxis("Vertical");
-        forward = transform.forward;
-        forward.y = 0;
-        right = transform.right;
+        if (!phealth.dead)
+        {
+            xInput = Input.GetAxis("Horizontal");
+            yInput = Input.GetAxis("Vertical");
+            forward = transform.forward;
+            forward.y = 0;
+            right = transform.right;
 
-        moveDirection = forward * yInput + right * xInput;
-        cc.Move(playerSpeed * moveDirection);
+            moveDirection = forward * yInput + right * xInput;
+            cc.Move(playerSpeed * moveDirection);
 
-        vel.y += gravity * Time.deltaTime;
+            vel.y += gravity * Time.deltaTime;
 
-        cc.Move(vel * Time.deltaTime);
+            cc.Move(vel * Time.deltaTime);
+        }
+        
 
         //STATE MANAGEMENT
         //cloak
@@ -116,10 +135,14 @@ public class PlayerController : MonoBehaviour
             cloakfizzle.Play();
             StopCoroutine(cloak());
             StartCoroutine(decloak());
+            GameObject[] oldIPs = GameObject.FindGameObjectsWithTag("IP");
             IP_INST = Instantiate(investigationPoint, IPStorage.transform).GetComponent<InvestigationPoint>();
             IP_INST.transform.position = transform.position;
             IP_INST.AlertNearbyEnemies(5f);
-             //duh
+            foreach(GameObject e in oldIPs)
+            {
+                Destroy(e);
+            }
         }
 
         if (Input.GetMouseButtonDown(0) && canFire)
@@ -129,6 +152,7 @@ public class PlayerController : MonoBehaviour
             if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, groundLM))
             {
                 //you're going to be indoors so yes, this will always work, unless the distance is restricted. It shouldn't be though.
+                //surprise, it doesnt work on floors very well :)
                 Wall wScript = hit.collider.gameObject.GetComponent<Wall>();
                 Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * 10.0f, Color.green, 0.5f);
                 StartCoroutine(wScript.WallReaction());

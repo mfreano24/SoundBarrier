@@ -19,7 +19,7 @@ public class MainMenu : MonoBehaviour
 
     public void StartGame()
     {
-        SceneManager.LoadScene("Main"); //main is the test level. just roll with me here.
+        SceneManager.LoadScene("Level1"); //begin this shitshow
     }
 
     public void QuitGame()
