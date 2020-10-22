@@ -23,11 +23,13 @@ public class PlayerEffects : MonoBehaviour
 
     private void Update()
     {
+        /*
         if (Input.GetKeyDown(KeyCode.K))
         {
             //DEBUG FOR NOW.
             StartCoroutine(BloodFlash());
         }
+        */
     }
 
     public IEnumerator BloodFlash()

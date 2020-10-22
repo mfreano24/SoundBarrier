@@ -16,11 +16,16 @@ public class GameManager : MonoBehaviour
     public bool playerWin, roundOver;
     bool endOfGame = false;
 
+    //beginning and end animations
+    public float beforeLevelWait;
+    public float afterLevelWait;
+    public MainUI mui;
+
     void Start()
     {
         DontDestroyOnLoad(this);
         ph = pc.GetComponent<PlayerHealth>();
-        PreLevel = new WaitForSeconds(3.5f); //this can be changed later methinks
+        PreLevel = new WaitForSeconds(1.5f); //this can be changed later methinks
         PostLevel = new WaitForSeconds(3.5f);
         StartCoroutine(GameLoop());
     }
@@ -67,11 +72,13 @@ public class GameManager : MonoBehaviour
 
     public IEnumerator LevelEnd()
     {
-        Debug.Log("LEVEL END...");
+        //Debug.Log("LEVEL END...");
         pc.enabled = false;
         if (playerWin)
         {
+            Debug.Log("The player got to the exit!");
             CURRENT_LEVEL++; //advance to the next level.
+            mui.SetFloorNumberText(CURRENT_LEVEL);
             if (CURRENT_LEVEL > 10)
             {
                 //call the ending and dont return.
@@ -95,6 +102,15 @@ public class GameManager : MonoBehaviour
 
     void OnSceneLoad(Scene scene, LoadSceneMode mode)
     {
-        pc = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
+        try
+        {
+            pc = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
+            mui = GameObject.Find("Canvas").GetComponent<MainUI>();
+        }
+        catch(MissingReferenceException e)
+        {
+            Debug.Log("No player found");
+        }
+        
     }
 }

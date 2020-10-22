@@ -4,6 +4,7 @@ using UnityEngine.UI;
 
 public class PlayerController : MonoBehaviour
 {
+    //todo: clean this up please
     PlayerHealth phealth;
 
     public float playerSpeed, gravity = -9.81f;
@@ -11,8 +12,7 @@ public class PlayerController : MonoBehaviour
     public float groundDist = 0.4f;
     public LayerMask groundLM;
 
-    public GameObject investigationPoint; //spawn this upon shooting OR decloaking, and it should last for 5 seconds.
-    InvestigationPoint IP_INST;
+    public InvestigationPoint IP;
 
     public bool cloaked = false, cooldown = false;
     //debug
@@ -33,19 +33,30 @@ public class PlayerController : MonoBehaviour
 
     public ParticleSystem muzzlePS;
     public ParticleSystem cloakfizzle;
+    public ParticleSystem wallHitPS;
     public Transform gunTransform;
-    [SerializeField]
+    public Animator gunAnim;
+
     bool canFire = true;
-    //public GameObject muzzleFlash;
+    bool sprinting = false;
+    bool enemyAlerted = false;
+    
 
     public bool inSwitchRange = false;
     FenceSwitchPanel currentFSP;
 
-    //List<InvestigationPoint> spawnedPoints; //this will be for optimization's sake, i guess. dont want too many of these spawning
-    public GameObject IPStorage;
+    public CameraController cameraCon;
 
+    private void OnEnable()
+    {
+        cameraCon.enabled = true;
+    }
 
-    
+    private void OnDisable()
+    {
+        cameraCon.enabled = false;
+    }
+
     private void Start()
     {
         wallMat.SetFloat("Vector1_2F06040B", 1.00f);
@@ -63,11 +74,34 @@ public class PlayerController : MonoBehaviour
 
         if (Input.GetKey(KeyCode.LeftShift))
         {
-            playerSpeed = 0.3f;
+            if (canFire && !sprinting)
+            {
+                StartCoroutine(gunRotateDown());
+                canFire = false;
+                sprinting = true;
+            }
+            //re-activate the investigation point every frame UNTIL it catches someone.
+            if (!enemyAlerted)
+            {
+                //need a case to reset this thing but like, if you activate this you're probably going to get shot.
+                enemyAlerted = IP.ActivateNoise(5f, transform.position);
+            }
+            else
+            {
+                Debug.Log("Enemy is aware of your sprinting and would like to hurt you.");
+            }
+            playerSpeed = 0.2f;
         }
         else
         {
-            playerSpeed = 0.15f;
+            if (!canFire && sprinting)
+            {
+                StartCoroutine(gunRotateUp());
+                canFire = true;
+                sprinting = false;
+            }
+
+            playerSpeed = 0.1f;
         }
 
 
@@ -90,7 +124,7 @@ public class PlayerController : MonoBehaviour
 
             cc.Move(vel * Time.deltaTime);
         }
-        
+
 
         //STATE MANAGEMENT
         //cloak
@@ -107,7 +141,7 @@ public class PlayerController : MonoBehaviour
         else if (cloakTimer < 5.00f)
         {
             cloakTimer += Time.deltaTime;
-            if(cloakTimer > 5.00f)
+            if (cloakTimer > 5.00f)
             {
                 cloakTimer = 5.00f;
             }
@@ -119,7 +153,7 @@ public class PlayerController : MonoBehaviour
         }
 
         //UPDATE VALUES
-        cloakSlider.fillAmount = cloakTimer/5.0f;
+        cloakSlider.fillAmount = cloakTimer / 5.0f;
 
         //INPUT
         if (Input.GetMouseButtonDown(1) && !cloaked && !cooldown)
@@ -128,34 +162,42 @@ public class PlayerController : MonoBehaviour
             //This will allow for quick decision making on the player's part if new information becomes apparent mid-cloak.
             cloakfizzle.Play();
             StartCoroutine(cloak());
-            
+
         }
         else if (Input.GetMouseButtonDown(1) && !cooldown)
         {
             cloakfizzle.Play();
             StopCoroutine(cloak());
             StartCoroutine(decloak());
-            GameObject[] oldIPs = GameObject.FindGameObjectsWithTag("IP");
-            IP_INST = Instantiate(investigationPoint, IPStorage.transform).GetComponent<InvestigationPoint>();
-            IP_INST.transform.position = transform.position;
-            IP_INST.AlertNearbyEnemies(5f);
-            foreach(GameObject e in oldIPs)
-            {
-                Destroy(e);
-            }
+            //investigation points
+
+            IP.ActivateNoise(5, transform.position);
+
         }
 
         if (Input.GetMouseButtonDown(0) && canFire)
         {
             StartCoroutine(muzzleFlash());
             RaycastHit hit;
-            if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, groundLM))
+            if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, Mathf.Infinity, groundLM))
             {
+                //THIS HAS GOT TO BE THE SINGLE DUMBEST BUG IVE EVER ENCOUNTERED.
+                //Debug.Log("Ground Layermask: " + groundLM);
                 //you're going to be indoors so yes, this will always work, unless the distance is restricted. It shouldn't be though.
-                //surprise, it doesnt work on floors very well :)
+                //STRETCH: modify this so sound waves reveal a certain amount of wall depending on how far away the sound was fired? should be a neat addition if the design wasnt so shaky.
                 Wall wScript = hit.collider.gameObject.GetComponent<Wall>();
+                wallHitPS.gameObject.transform.position = hit.point;
+                wallHitPS.Play();
                 Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * 10.0f, Color.green, 0.5f);
-                StartCoroutine(wScript.WallReaction());
+                if(wScript != null)
+                {
+                    StartCoroutine(wScript.WallReaction());
+                }
+                else
+                {
+                    Debug.Log("Could not find a wall collider on game object called " + hit.collider.gameObject);
+                }
+                
                 Debug.Log("successful hit!");
             }
             else
@@ -164,10 +206,9 @@ public class PlayerController : MonoBehaviour
                 Debug.Log("wall out of range(?)");
             }
 
-            IP_INST = Instantiate(investigationPoint, IPStorage.transform).GetComponent<InvestigationPoint>();
-            IP_INST.transform.position = transform.position;
-            IP_INST.AlertNearbyEnemies(30f);
-             //duh
+            //INVESTIGATION POINT!
+            IP.ActivateNoise(30, transform.position);
+            //duh
 
         }
 
@@ -177,7 +218,7 @@ public class PlayerController : MonoBehaviour
             //WILL BE CALLED "INTERACT"
 
             currentFSP.HandlePlayerInteraction();
-            
+
         }
     }
 
@@ -192,7 +233,7 @@ public class PlayerController : MonoBehaviour
             dissolveMat.SetFloat("Vector1_2F06040B", val);
             val += 0.01f;
         }
-        
+
 
         yield return null;
     }
@@ -215,32 +256,45 @@ public class PlayerController : MonoBehaviour
     IEnumerator muzzleFlash()
     {
         canFire = false;
-        //77.5 z == Gun is up
-        //120 z == Gun is being reloaded.
         muzzlePS.Play();
-        yield return new WaitForSeconds(0.25f);
-        for(int i = 1; i <= 10; i++)
-        {
-            gunTransform.localRotation = Quaternion.Euler(0, 84.64f, 77.5f + i * (120 - 77.5f) / 10);
-            yield return new WaitForSeconds(0.005f);
-        }
+        gunAnim.SetTrigger("ShootGun");
+        yield return new WaitForSeconds(0.1f);
+        gunAnim.SetTrigger("Reload");
 
-        yield return new WaitForSeconds(0.3f);
+        Debug.Log("Reload!");
+        
+        yield return new WaitForSeconds(1f);
 
+        Debug.Log("Ready to fire.");
+        canFire = true;
+    }
+
+    IEnumerator gunRotateDown()
+    {
+        Debug.Log("Sprinting... gun down.");
         for (int i = 1; i <= 10; i++)
         {
-            gunTransform.localRotation = Quaternion.Euler(0, 84.64f, 120f - i * (120 - 77.5f) / 10);
+            gunTransform.position = new Vector3(gunTransform.position.x, gunTransform.position.y - 1f, gunTransform.position.z);
             yield return new WaitForSeconds(0.005f);
         }
-        canFire = true;
+
+    }
+
+    IEnumerator gunRotateUp()
+    {
+        Debug.Log("Walking... gun up.");
+        for (int i = 1; i <= 10; i++)
+        {
+            gunTransform.position = new Vector3(gunTransform.position.x, gunTransform.position.y + 1f, gunTransform.position.z);
+            yield return new WaitForSeconds(0.005f);
+        }
+
     }
 
     public void InvestigationPointCallback(EnemyAI e)
     {
-        IP_INST = Instantiate(investigationPoint, IPStorage.transform).GetComponent<InvestigationPoint>();
-        IP_INST.transform.position = transform.position;
-        IP_INST.AlertSpecificEnemy(e);
-        //duh
+        //investigation point a SPECIFIC enemy that is passed in!
+        IP.ActivateSight(e, transform.position);
     }
 
     public void FenceSwitchCallback(bool inRange, FenceSwitchPanel panel)
@@ -259,7 +313,7 @@ public class PlayerController : MonoBehaviour
         inSwitchRange = inRange;
     }
 
-    
+
 
 
 }

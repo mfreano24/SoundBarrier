@@ -11,6 +11,7 @@ public class EnemyAI : MonoBehaviour
     public Transform player;
     public PlayerController pcScript;
     public PlayerHealth pHealth;
+    PlayerEffects pEffects;
     public LayerMask lm;
     public ParticleSystem ps;
     public Vector3[] patrol; //assign this through the editor.
@@ -30,8 +31,9 @@ public class EnemyAI : MonoBehaviour
     //                              Good way to implement this would be to have an investigation point spawned if the player is within some Vector3 Distance
     // STATE 2 = "Attack" - shoot! dont need to dodge because you do lots of damage.
 
-    SightlineVisualizer viz;
+    public SightlineVisualizer viz;
 
+    
 
     void Awake()
     {
@@ -44,6 +46,7 @@ public class EnemyAI : MonoBehaviour
         transform.position = patrol[patrolIndex - 1]; //assign it so we arent travelling randomly
         nav.SetDestination(patrol[patrolIndex]);
         investigationPoint = new Vector3(-999, -999, -999); //Going off of the sheer confidence that this value won't be an investigation point?
+        //watch it be, you silly monkey
         NULL_IP = investigationPoint;
         //TODO: may need to change that, because Vector3s are *not* nullable.
     }
@@ -71,8 +74,10 @@ public class EnemyAI : MonoBehaviour
 
     private void Start()
     {
-        viz = GetComponent<SightlineVisualizer>(); //these should be on the same object, right?
+        //viz = GetComponent<SightlineVisualizer>(); //these should be on the same object, right?
+        pEffects = pHealth.gameObject.GetComponent<PlayerEffects>();
         viz.CurrentColor = Color.green;
+        StartCoroutine(Shoot());
     }
 
     void Update()
@@ -83,8 +88,8 @@ public class EnemyAI : MonoBehaviour
         //debug
         //PlayerInFront();
 
-        Debug.DrawRay(transform.position,(2.0f * nav.velocity), Color.cyan);
-        transform.LookAt(nav.velocity);
+        //Debug.DrawRay(transform.position,(2.0f * nav.velocity), Color.cyan);
+        //transform.LookAt(nav.velocity);
 
         switch (state)
         {
@@ -102,12 +107,10 @@ public class EnemyAI : MonoBehaviour
                 break;
         }
         //Debug.Log("Enemy " + (PlayerVisible() ? "can see " : "cannot see ") + "the player. pHealth.dead == " + pHealth.dead + " and shooting == " + shooting);
-        if (PlayerVisible() && !pHealth.dead && !shooting)
+        if (PlayerVisible() && !pHealth.dead && state != 2)
         {
-            shooting = true;
-            StartCoroutine(Shoot());
             state = 2;
-            nav.SetDestination(transform.position); //dont move, just spray!
+            nav.SetDestination(transform.position);
             viz.CurrentColor = Color.red;
         }
 
@@ -150,7 +153,6 @@ public class EnemyAI : MonoBehaviour
         if (!PlayerVisible())
         {
             Debug.Log("Player isn't visible anymore.");
-            shooting = false;
             state = 1;
             viz.CurrentColor = Color.yellow;
             pcScript.InvestigationPointCallback(this);
@@ -160,20 +162,38 @@ public class EnemyAI : MonoBehaviour
 
     IEnumerator Shoot()
     {
-        Debug.Log("SHOOTING AT PLAYER: doubleshot buffer? " + DoubleShotBuffer);
-        while (shooting && !pHealth.dead && !DoubleShotBuffer)
+        float shootStep = 0.75f;
+        float shootTimer = 0.0f;
+        while (true)
         {
-            DoubleShotBuffer = true;
-            ps.Play();
-            pHealth.TakeDamage(TESTGunDamage);
-            yield return new WaitForSeconds(0.5f);
+            
+            if (state == 2)
+            {
+                if(shootTimer >= shootStep)
+                {
+                    ps.Play();
+                    pHealth.TakeDamage(TESTGunDamage);
+                    StartCoroutine(pEffects.BloodFlash());
+                    shootTimer = 0;
+                }
+                else
+                {
+                    shootTimer += Time.deltaTime;
+                }
+                
+            }
+            else
+            {
+                shootTimer = 0.75f;
+            }
+            yield return new WaitForEndOfFrame();
         }
-        DoubleShotBuffer = false;
-        shooting = false;
+
     }
 
     bool PlayerVisible()
     {
+        //viz.DrawFieldOfView();
         RaycastHit hit;
         if (Physics.Raycast(transform.position, player.position - transform.position, out hit, 
             Vector3.Distance(transform.position, player.position) + 0.01f, lm) 
@@ -185,16 +205,18 @@ public class EnemyAI : MonoBehaviour
         else
         {
             Debug.DrawRay(transform.position, player.position - transform.position, Color.green);
-            return PlayerInFront() && Vector3.Distance(transform.position, player.position) <= 20f; //efficiency, so that PIF only runs here.
+            return PlayerInFront() && Vector3.Distance(transform.position, player.position) <= 22.5f; //efficiency, so that PIF only runs here.
             //they dont need to have all seeing vision otherwise the player may have trouble seeing them when they get spotted!
         }
         
     }
 
+    
+
     bool PlayerInFront()
     {
         //Debug.LogWarning(Vector3.Angle(transform.forward, player.position - transform.position) + "\t"+(Vector3.Angle(transform.forward, player.position - transform.position) < 90.0f ? "Player is in front" : "Player is behind"));
-        return (Vector3.Angle(transform.forward, player.position - transform.position) < 45.0f);
+        return (Vector3.Angle(transform.forward, player.position - transform.position) < 35.0f);
         //this works, dont touch it! please. god.
     }
 
@@ -215,21 +237,14 @@ public class EnemyAI : MonoBehaviour
 
     public void ResetIP(Vector3 _reset)
     {
-        if(_reset == investigationPoint)
+
+        Debug.Log("Newest investigation point has been cleared!");
+        investigationPoint = NULL_IP;
+        if (state != 2)
         {
-            Debug.Log("Newest investigation point has been cleared!");
-            investigationPoint = NULL_IP;
-            if(state != 2)
-            {
-                state = 0;
-                viz.CurrentColor = Color.green;
-                nav.SetDestination(GetClosestPatrolPoint());
-            }
-            
-        }
-        else
-        {
-            Debug.Log("No reset- a fresher Investigation Point is current priority.");
+            state = 0;
+            viz.CurrentColor = Color.green;
+            nav.SetDestination(GetClosestPatrolPoint());
         }
         
     }

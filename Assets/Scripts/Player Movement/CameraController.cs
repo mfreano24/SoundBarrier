@@ -4,12 +4,13 @@ using UnityEngine;
 
 public class CameraController : MonoBehaviour
 {
-    public float mouseSensitivity = 100;
+    public float mouseSensitivity = 100f;
     public Transform playerBody;
 
     float mouseX, mouseY, xRotation;
     void Start()
     {
+        mouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", 100);
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
     }
@@ -17,6 +18,7 @@ public class CameraController : MonoBehaviour
 
     void LateUpdate()
     {
+        mouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", 100);
         mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 
