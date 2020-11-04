@@ -30,6 +30,12 @@ public class MainUI : MonoBehaviour
     //player controller
     PlayerController pc;
 
+    [Header("Toggle HUD elements")]
+    public GameObject cloakImage;
+    public GameObject healthImage;
+    public GameObject crosshair;
+    public GameObject promptContainer;
+
 
     private void Awake()
     {
@@ -41,6 +47,8 @@ public class MainUI : MonoBehaviour
         sfxVolumeSlider.normalizedValue = 0.5f;
         mouseSensitivitySlider.normalizedValue = 0.5f;
         mouseSensitivitySlider.onValueChanged.AddListener(delegate { ChangeMouseSensitivity(); });
+        musicVolumeSlider.onValueChanged.AddListener(delegate { ChangeMusicVolume(); });
+        sfxVolumeSlider.onValueChanged.AddListener(delegate { ChangeSFXVolume(); });
     }
 
     void Start()
@@ -109,6 +117,7 @@ public class MainUI : MonoBehaviour
 
     public void ResumeGame()
     {
+        AudioManager.singleton.PlaySFX("button-click");
         if (!settingsMenu.activeSelf) //these buttons shouldnt work while in settings mode, otherwise the player could resume play while in the setting menu. bad.
         {
             TogglePauseScreen();
@@ -118,11 +127,13 @@ public class MainUI : MonoBehaviour
 
     public void OpenSettingsMenu()
     {
+        AudioManager.singleton.PlaySFX("button-click");
         settingsMenu.SetActive(true); //we out here
     }
 
     public void QuitToMainMenu()
     {
+        AudioManager.singleton.PlaySFX("button-click");
         if (!settingsMenu.activeSelf)
         {
             SceneManager.LoadScene("MainMenu");
@@ -135,14 +146,27 @@ public class MainUI : MonoBehaviour
         settingsMenu.SetActive(false);
     }
 
+
+    public void ToggleHUD()
+    {
+        bool set = !(cloakImage.activeInHierarchy);
+        cloakImage.SetActive(set);
+        healthImage.SetActive(set);
+        crosshair.SetActive(set);
+        promptContainer.SetActive(set);
+    }
+
     void ChangeMusicVolume()
     {
-        //TBD
+        PlayerPrefs.SetFloat("musicSliderValue", musicVolumeSlider.normalizedValue);
+        AudioManager.singleton.SetMusicVolume();
     }
     
     void ChangeSFXVolume()
     {
-        //TBD
+        PlayerPrefs.SetFloat("sfxSliderValue", sfxVolumeSlider.normalizedValue);
+        AudioManager.singleton.SetSFXVolume();
+
     }
 
     void ChangeMouseSensitivity()
@@ -156,6 +180,11 @@ public class MainUI : MonoBehaviour
         Debug.Log("Floor number text has been set!");
         StartCoroutine(beginning.SetFloorNumberText(_floorNumber));
         StartCoroutine(end.SetFloorNumberText(_floorNumber));
+    }
+
+    public void ButtonClickSound()
+    {
+        AudioManager.singleton.PlaySFX("button-click");
     }
 
 }

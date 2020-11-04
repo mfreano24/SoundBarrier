@@ -33,22 +33,36 @@ public class EnemyAI : MonoBehaviour
 
     public SightlineVisualizer viz;
 
+    InvestigationPoint IP;
+
     
 
     void Awake()
     {
+        /*
         for (int i = 0; i < patrol.Length; i++)
         {
             patrol[i].y  = transform.position.y;
         }
+        */
         nav = GetComponent<NavMeshAgent>();
-        patrolIndex = Random.Range(1, patrol.Length - 1); //just start somewhere.
-        transform.position = patrol[patrolIndex - 1]; //assign it so we arent travelling randomly
-        nav.SetDestination(patrol[patrolIndex]);
+        if(patrol.Length > 1)
+        {
+            patrolIndex = Random.Range(1, patrol.Length - 1); //just start somewhere.
+            transform.position = patrol[patrolIndex - 1]; //assign it so we arent travelling randomly
+            nav.SetDestination(patrol[patrolIndex]);
+        }
+        else
+        {
+            //dont need to do anything i guess?
+        }
+        
         investigationPoint = new Vector3(-999, -999, -999); //Going off of the sheer confidence that this value won't be an investigation point?
-        //watch it be, you silly monkey
+        //watch it be, you silly man
         NULL_IP = investigationPoint;
         //TODO: may need to change that, because Vector3s are *not* nullable.
+        IP = transform.parent.GetComponentInChildren<InvestigationPoint>();
+
     }
 
     private void OnDrawGizmos()
@@ -118,7 +132,8 @@ public class EnemyAI : MonoBehaviour
 
     void PatrolUpdate()
     {
-        if (Vector3.Distance(transform.position, patrol[patrolIndex]) <= 0.45f)
+        //Debug.Log("Distance to next patrol point = " + Vector3.Distance(transform.position, patrol[patrolIndex]));
+        if (Vector3.Distance(transform.position, patrol[patrolIndex]) <= 1f)
         {
             //NOTE: Optimize the magic number in the if statement above (0.45f?), so we can find a seamless transition from patrol target to patrol target.
             patrolIndex++;
@@ -127,8 +142,12 @@ public class EnemyAI : MonoBehaviour
                 //reset to 0 to accomodate the path
                 patrolIndex = 0;
             }
-            Debug.Log("Point reached! Patrol Index is now: " + patrolIndex + ".");
-            nav.SetDestination(patrol[patrolIndex]);
+            if(patrol.Length > 1)
+            {
+                Debug.Log("Point reached! Patrol Index is now: " + patrolIndex + ".");
+                nav.SetDestination(patrol[patrolIndex]);
+            }
+            
         }
         else
         {
@@ -195,9 +214,9 @@ public class EnemyAI : MonoBehaviour
     {
         //viz.DrawFieldOfView();
         RaycastHit hit;
-        if (Physics.Raycast(transform.position, player.position - transform.position, out hit, 
+        if ((Physics.Raycast(transform.position, player.position - transform.position, out hit, 
             Vector3.Distance(transform.position, player.position) + 0.01f, lm) 
-            || pcScript.cloaked)
+            || pcScript.cloaked)&& transform.position.y - player.position.y < 10.0f)
         {
             Debug.DrawRay(transform.position, hit.point - transform.position, Color.red);
             return false;
@@ -220,31 +239,45 @@ public class EnemyAI : MonoBehaviour
         //this works, dont touch it! please. god.
     }
 
-    public void NoiseAlert(Vector3 _investigationPoint)
+    public void NoiseAlert(Vector3 _investigationPoint, InvestigationPoint _IP)
     {
         //change state to investigative and begin navMeshing towards the point passed in.
         //if an investigation point already exists, just replace it, freshest sounds first!
-        Debug.Log("New Investigation Point "+_investigationPoint+" has reached enemy.");
-        investigationPoint = _investigationPoint;
-        if(state != 2)
+        if(Mathf.Abs(_investigationPoint.y - transform.position.y) <= 6f)
         {
-            state = 1;
-            viz.CurrentColor = Color.yellow;
-            nav.SetDestination(investigationPoint);
+            //Debug.Log("Investigation Point " + _investigationPoint + " has reached enemy.");
+            Debug.Log("Difference in Y positions: " + (_investigationPoint.y - transform.position.y));
+            investigationPoint = _investigationPoint;
+            if (state != 2)
+            {
+                state = 1;
+                viz.CurrentColor = Color.yellow;
+                nav.SetDestination(investigationPoint);
+            }
         }
+        else
+        {
+            Debug.Log("Difference in Y positions: " + (_investigationPoint.y - transform.position.y));
+        }
+        
         
     }
 
     public void ResetIP(Vector3 _reset)
     {
 
-        Debug.Log("Newest investigation point has been cleared!");
+        Debug.Log("Investigation state has been cleared!");
         investigationPoint = NULL_IP;
         if (state != 2)
         {
+            Debug.Log("Return to normalcy.");
             state = 0;
             viz.CurrentColor = Color.green;
             nav.SetDestination(GetClosestPatrolPoint());
+        }
+        else
+        {
+            Debug.Log("State is 2. Something is wrong.");
         }
         
     }

@@ -16,15 +16,31 @@ public class Exit : MonoBehaviour
         mui = GameObject.Find("Canvas").GetComponent<MainUI>();
     }
 
+    private void Update()
+    {
+        //PLEASE COMMENT THIS OUT ON BUILDS
+        //DEBUG LEVEL SKIPPER
+        if (Input.GetKeyDown(KeyCode.K))
+        {
+            endOfLevel();
+        }
+    }
+
     private void OnTriggerEnter(Collider other)
     {
         
         if (other.CompareTag("Player") && !gm.roundOver)
         {
-            Debug.Log("End of Level Trigger Entered!");
-            mui.ExitFound();
-            gm.playerWin = true;
-            gm.roundOver = true;
+            endOfLevel();
         }
+    }
+
+
+    void endOfLevel()
+    {
+        Debug.Log("End of Level Trigger Entered!");
+        mui.ExitFound();
+        gm.playerWin = true;
+        gm.roundOver = true;
     }
 }

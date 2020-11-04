@@ -12,15 +12,13 @@ public class Fence : MonoBehaviour
     Renderer r;
     Material electricity;
 
-    Color matColor;
+    public Color matColor;
     
-    void Start()
+    void Awake()
     {
         r = GetComponent<Renderer>();
-        electricity = r.material;
-        electricity.SetFloat("_Brightness", 2f);
-        electricity.SetFloat("_Strength", 5f);
-        matColor = electricity.GetColor("_Color");
+        r.material = new Material(r.material); //copy material (just like walls)
+        r.material.SetColor("_Color", matColor);
     }
 
     void Update()

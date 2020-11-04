@@ -15,6 +15,9 @@ public class Wall : MonoBehaviour
     Renderer r;
     Material mat;
 
+    bool dissolveMidBreak = false;
+    bool dissolveCoroutineLock = false;
+
     public GameObject clearWall; //make this the clear counterpart to the dissolve wall. Set it inactive initially, then set it active upon activating wallreaction.
     bool activated = false;
 
@@ -35,29 +38,50 @@ public class Wall : MonoBehaviour
 
     }
 
-
-    public IEnumerator WallReaction()
+    public void WallReactionHelper()
     {
+        StopCoroutine("WallReaction"); //why does this just straight up not work
+
         Material wallMat = r.material;
         Debug.Log("Gunshot! " + Time.time);
         wallMat.SetFloat("Vector1_2F06040B", 0.00f);
         if (!activated)
         {
+            Debug.Log("We have not activated the glass wall yet.");
             if (!DEBUG_NoGlass)
             {
+                Debug.Log("Activating glass wall.");
                 clearWall.SetActive(true);
             }
-            
+
             activated = true;
         }
-        
+        else
+        {
+            Debug.Log("Wall Already Activated! -=-=-=-=-=-=-=-=-=-=-");
+        }
+        StartCoroutine(WallReaction(wallMat));
+    }
+
+
+    public IEnumerator WallReaction(Material wallMat)
+    {
         yield return new WaitForSeconds(2.5f);
+        dissolveMidBreak = false;
         float val = 0.01f;
         for (int i = 0; i < 100; i++)
         {
-            yield return new WaitForSeconds(0.02f);
-            wallMat.SetFloat("Vector1_2F06040B", val);
-            val += 0.01f;
+            if (dissolveMidBreak)
+            {
+                break;
+            }
+            else
+            {
+                yield return new WaitForSeconds(0.02f);
+                wallMat.SetFloat("Vector1_2F06040B", val);
+                val += 0.01f;
+            }
+            
         }
     }
 }

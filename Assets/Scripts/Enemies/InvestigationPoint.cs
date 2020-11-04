@@ -4,104 +4,75 @@ using UnityEngine;
 
 public class InvestigationPoint : MonoBehaviour
 {
-    List<EnemyAI> alertedEnemies;
-    bool enemyCloseToPoint = false;
+    [HideInInspector] public bool enemyCloseToPoint = false;
 
-    bool enemyCloseCoroutineInProgress = false;
+    EnemyAI assignedEnemy;
+    public bool activePoint = false;
+    bool inDeacCoroutine = false;
+    Vector3 activePosition;
+    bool breakCoroutineRefreshPoint = false;
     void Start()
     {
-        alertedEnemies = new List<EnemyAI>(); //init
-        StartCoroutine(CheckForNearbyEnemies());
+        activePosition = transform.position;
+        assignedEnemy = transform.parent.GetComponentInChildren<EnemyAI>();//get the enemy AI script in the encapsulator
     }
-    /// <summary>
-    /// "One at a time" model of Investigation point simulation
-    /// Pros: no clutter, no deleting things.
-    /// </summary>
 
-    private void Update()
+    private void LateUpdate()
     {
+        
+        if (Vector3.Distance(assignedEnemy.transform.position, activePosition) <= 5f && activePoint && !inDeacCoroutine)
+        {
+            StartCoroutine(WaitForDeactivate());
+        }
     }
 
     public bool ActivateNoise(float distanceToAlert, Vector3 globalPosition)
     {
-        bool ret = false;
-        //hmmm
-        //DeactivateAll();
-        transform.position = globalPosition;
-        Debug.Log("Attempting to alert enemies at the position " + globalPosition);
-        foreach (GameObject e in GameObject.FindGameObjectsWithTag("Enemy"))
+        if(Vector3.Distance(globalPosition, assignedEnemy.transform.position) <= distanceToAlert)
         {
-            if(Vector3.Distance(e.transform.position, globalPosition) <= distanceToAlert)
+            if (inDeacCoroutine)
             {
-                ret = true;
-                EnemyAI curr = e.GetComponent<EnemyAI>();
-                if (alertedEnemies.Contains(curr))
-                {
-                    curr.ResetIP(transform.TransformDirection(transform.position));
-                }
-                alertedEnemies.Add(curr);
-                curr.NoiseAlert(globalPosition);
+                breakCoroutineRefreshPoint = true;
             }
+            activePosition = globalPosition;
+            assignedEnemy.NoiseAlert(globalPosition, this);
+            activePoint = true;
+            return true;
         }
-        return ret; //returns true if an enemy has been alerted. only really needed for the running.
+        //otherwise ignore the noise attempt
+        return false;
     }
 
     public void ActivateSight(EnemyAI enemyToAlert, Vector3 globalPosition)
     {
-        Debug.Log("Enemy has lost sight of player, investigating now.");
-        DeactivateAll();
-        alertedEnemies.Add(enemyToAlert);
-        enemyToAlert.NoiseAlert(globalPosition);
-        
-    }
-
-    public void DeactivateAll()
-    {
-        foreach(EnemyAI e in alertedEnemies)
+        if(enemyToAlert == assignedEnemy)
         {
-            e.ResetIP(transform.TransformDirection(transform.position));
-        }
-    }
-
-    IEnumerator CheckForNearbyEnemies()
-    {
-        while (true)
-        {
-            if (!enemyCloseToPoint)
+            if (inDeacCoroutine)
             {
-                foreach (EnemyAI e in alertedEnemies)
-                {
-                    if (Vector3.Distance(transform.position, e.transform.position) <= 5)
-                    {
-                        StartCoroutine(WaitForDeactivation());
-                        enemyCloseToPoint = true;
-                    }
-                }
-            }   
-            yield return new WaitForEndOfFrame();
+                breakCoroutineRefreshPoint = true;
+            }
+            activePosition = globalPosition;
+            assignedEnemy.NoiseAlert(globalPosition, this);
+            activePoint = true;
         }
-   
     }
 
-    IEnumerator WaitForDeactivation()
+    IEnumerator WaitForDeactivate()
     {
-        //TODO: this is being called like hell.
-        if (!enemyCloseCoroutineInProgress)
+        Debug.Log("Waiting 3s for deactivation now. Enemy's close to the point.");
+        inDeacCoroutine = true;
+        yield return new WaitForSeconds(3f);
+        if (!breakCoroutineRefreshPoint)
         {
-            enemyCloseCoroutineInProgress = true;
-            yield return new WaitUntil(() => enemyCloseToPoint);
-            Debug.Log("Enemy's close to the point!");
-            yield return new WaitForSeconds(2.5f);
-            DeactivateAll();
-            enemyCloseToPoint = false;
-            enemyCloseCoroutineInProgress = false;
+            assignedEnemy.ResetIP(transform.position);
+            inDeacCoroutine = false;
+            activePoint = false;
+            //active position doesnt matter if the point itself isnt active.
         }
         else
         {
-            Debug.Log("Breaking, coroutine already in progress...");
-            yield return null;
+            breakCoroutineRefreshPoint = false;
         }
-       
-    }
 
+    }
 }

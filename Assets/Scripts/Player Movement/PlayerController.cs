@@ -5,14 +5,22 @@ using UnityEngine.UI;
 public class PlayerController : MonoBehaviour
 {
     //todo: clean this up please
+    [Header("Player Movement and GroundCheck")]
+    public CameraController cameraCon;
     PlayerHealth phealth;
-
     public float playerSpeed, gravity = -9.81f;
     public Transform groundCheck;
     public float groundDist = 0.4f;
     public LayerMask groundLM;
+    float xInput, yInput;
+    Vector3 moveDirection, forward, right, vel;
+    CharacterController cc;
+    bool isGrounded;
+    [SerializeField]
+    float cloakTimer = 5.0f;
 
-    public InvestigationPoint IP;
+    [Header("EnemyRelations")]
+    public IPManager IP;
 
     public bool cloaked = false, cooldown = false;
     //debug
@@ -23,29 +31,22 @@ public class PlayerController : MonoBehaviour
 
     public Image cloakSlider;
 
-    float xInput, yInput;
-    Vector3 moveDirection, forward, right, vel;
-    CharacterController cc;
-    bool isGrounded;
-
-    [SerializeField]
-    float cloakTimer = 5.0f;
-
+    
+    [Header("Extraneous Objects")]
     public ParticleSystem muzzlePS;
     public ParticleSystem cloakfizzle;
     public ParticleSystem wallHitPS;
     public Transform gunTransform;
     public Animator gunAnim;
 
+    [Header("State Booleans")]
+    [HideInInspector] public bool moving = false;
     bool canFire = true;
     bool sprinting = false;
     bool enemyAlerted = false;
     
-
     public bool inSwitchRange = false;
     FenceSwitchPanel currentFSP;
-
-    public CameraController cameraCon;
 
     private void OnEnable()
     {
@@ -76,7 +77,7 @@ public class PlayerController : MonoBehaviour
         {
             if (canFire && !sprinting)
             {
-                StartCoroutine(gunRotateDown());
+                gunAnim.SetTrigger("SprintStart");
                 canFire = false;
                 sprinting = true;
             }
@@ -84,7 +85,8 @@ public class PlayerController : MonoBehaviour
             if (!enemyAlerted)
             {
                 //need a case to reset this thing but like, if you activate this you're probably going to get shot.
-                enemyAlerted = IP.ActivateNoise(5f, transform.position);
+                //this is working kind of weird. maybe if we fix it from this perspective it will be less disruptive.
+                //enemyAlerted = IP.NoiseActivate(5f, transform.position);
             }
             else
             {
@@ -96,7 +98,7 @@ public class PlayerController : MonoBehaviour
         {
             if (!canFire && sprinting)
             {
-                StartCoroutine(gunRotateUp());
+                gunAnim.SetTrigger("SprintEnd");
                 canFire = true;
                 sprinting = false;
             }
@@ -118,6 +120,14 @@ public class PlayerController : MonoBehaviour
             right = transform.right;
 
             moveDirection = forward * yInput + right * xInput;
+            if (moveDirection != Vector3.zero)
+            {
+                moving = true;
+            }
+            else
+            {
+                moving = false;
+            }
             cc.Move(playerSpeed * moveDirection);
 
             vel.y += gravity * Time.deltaTime;
@@ -171,12 +181,13 @@ public class PlayerController : MonoBehaviour
             StartCoroutine(decloak());
             //investigation points
 
-            IP.ActivateNoise(5, transform.position);
+            IP.NoiseActivate(5, transform.position);
 
         }
 
         if (Input.GetMouseButtonDown(0) && canFire)
         {
+            AudioManager.singleton.PlaySFX("GunFire", 0.5f);
             StartCoroutine(muzzleFlash());
             RaycastHit hit;
             if (Physics.Raycast(Camera.main.transform.position, Camera.main.transform.forward, out hit, Mathf.Infinity, groundLM))
@@ -191,7 +202,7 @@ public class PlayerController : MonoBehaviour
                 Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * 10.0f, Color.green, 0.5f);
                 if(wScript != null)
                 {
-                    StartCoroutine(wScript.WallReaction());
+                    wScript.WallReactionHelper();
                 }
                 else
                 {
@@ -207,7 +218,7 @@ public class PlayerController : MonoBehaviour
             }
 
             //INVESTIGATION POINT!
-            IP.ActivateNoise(30, transform.position);
+            IP.NoiseActivate(30, transform.position);
             //duh
 
         }
@@ -260,7 +271,8 @@ public class PlayerController : MonoBehaviour
         gunAnim.SetTrigger("ShootGun");
         yield return new WaitForSeconds(0.1f);
         gunAnim.SetTrigger("Reload");
-
+        yield return new WaitForSeconds(0.3f);
+        AudioManager.singleton.PlaySFX("GunReload");
         Debug.Log("Reload!");
         
         yield return new WaitForSeconds(1f);
@@ -269,32 +281,10 @@ public class PlayerController : MonoBehaviour
         canFire = true;
     }
 
-    IEnumerator gunRotateDown()
-    {
-        Debug.Log("Sprinting... gun down.");
-        for (int i = 1; i <= 10; i++)
-        {
-            gunTransform.position = new Vector3(gunTransform.position.x, gunTransform.position.y - 1f, gunTransform.position.z);
-            yield return new WaitForSeconds(0.005f);
-        }
-
-    }
-
-    IEnumerator gunRotateUp()
-    {
-        Debug.Log("Walking... gun up.");
-        for (int i = 1; i <= 10; i++)
-        {
-            gunTransform.position = new Vector3(gunTransform.position.x, gunTransform.position.y + 1f, gunTransform.position.z);
-            yield return new WaitForSeconds(0.005f);
-        }
-
-    }
-
     public void InvestigationPointCallback(EnemyAI e)
     {
         //investigation point a SPECIFIC enemy that is passed in!
-        IP.ActivateSight(e, transform.position);
+        IP.SightActivate(e, transform.position);
     }
 
     public void FenceSwitchCallback(bool inRange, FenceSwitchPanel panel)

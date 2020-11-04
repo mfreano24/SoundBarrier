@@ -102,15 +102,34 @@ public class GameManager : MonoBehaviour
 
     void OnSceneLoad(Scene scene, LoadSceneMode mode)
     {
-        try
+        if(scene.name[0] == 'L')
         {
-            pc = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
-            mui = GameObject.Find("Canvas").GetComponent<MainUI>();
+            //we're in a level because i named the scenes that way
+            switch (scene.name[scene.name.Length - 1])
+            {
+                case '1': AudioManager.singleton.PlayLevelMusic("Level1_2", true); break;
+                case '3': AudioManager.singleton.PlayLevelMusic("Level3_4", true); break;
+                case '5': AudioManager.singleton.PlayLevelMusic("Level5_6", true); break;
+                case '7': AudioManager.singleton.PlayLevelMusic("Level7_8", true); break;
+            }
+
+            try
+            {
+                pc = GameObject.FindGameObjectWithTag("Player").GetComponent<PlayerController>();
+                mui = GameObject.Find("Canvas").GetComponent<MainUI>();
+            }
+            catch (MissingReferenceException e)
+            {
+                Debug.Log("No player found");
+            }
         }
-        catch(MissingReferenceException e)
+        else
         {
-            Debug.Log("No player found");
+            //we're in the main menu
+            //AudioManager.singleton.PlayMusic("MainMenuTrack", true); break;
+            Destroy(this.gameObject);
         }
+        
         
     }
 }
