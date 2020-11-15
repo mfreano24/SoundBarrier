@@ -15,6 +15,7 @@ GameObject:
   - component: {fileID: 3148176322511687501}
   - component: {fileID: 4426681312092021692}
   - component: {fileID: 4426681312092021693}
+  - component: {fileID: 7682328781543599537}
   m_Layer: 0
   m_Name: GunnerRobot
   m_TagString: Enemy
@@ -37,6 +38,7 @@ Transform:
   - {fileID: 5926151567542954537}
   - {fileID: 1708738649272895092}
   - {fileID: 4106936253233107884}
+  - {fileID: 8813236344284003682}
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -52,6 +54,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fc0912c212892e0448e57c325d69f505, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  defaultY: 0
 --- !u!114 &8059278368848524713
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -81,6 +84,7 @@ MonoBehaviour:
   - {x: -27, y: 0, z: -7.5}
   - {x: -40, y: 0, z: -7.5}
   textDebug: {fileID: 0}
+  childNav: {fileID: 5391549503371120888}
   viz: {fileID: 0}
 --- !u!195 &8059278368848524718
 NavMeshAgent:
@@ -249,6 +253,24 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!114 &7682328781543599537
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1647801366196129085}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 245d7286717354a4a801bef05b5a6130, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  clipsInspector:
+  - {fileID: 8300000, guid: 78cac95eb3b9f3949bdd001b12a19800, type: 3}
+  - {fileID: 8300000, guid: c60f14aa4ba9c5b4d9e2b6161efbca2c, type: 3}
+  - {fileID: 8300000, guid: 3cd5b03b689df5d4f97726ef2125bf07, type: 3}
+  - {fileID: 8300000, guid: bcbe22fcbc37b9744a003922c8d45f6d, type: 3}
+  isDiegetic: 0
 --- !u!1 &2929143867972271724
 GameObject:
   m_ObjectHideFlags: 0
@@ -505,6 +527,59 @@ MeshRenderer:
   m_SortingLayer: 0
   m_SortingOrder: 0
   m_AdditionalVertexStreams: {fileID: 0}
+--- !u!1 &7094251594229864384
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 8813236344284003682}
+  - component: {fileID: 5391549503371120888}
+  m_Layer: 0
+  m_Name: NavCalculator
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &8813236344284003682
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7094251594229864384}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_Children: []
+  m_Father: {fileID: 2131885083470485383}
+  m_RootOrder: 4
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!195 &5391549503371120888
+NavMeshAgent:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7094251594229864384}
+  m_Enabled: 1
+  m_AgentTypeID: 0
+  m_Radius: 0.5
+  m_Speed: 0
+  m_Acceleration: 8
+  avoidancePriority: 50
+  m_AngularSpeed: 120
+  m_StoppingDistance: 0
+  m_AutoTraverseOffMeshLink: 1
+  m_AutoBraking: 1
+  m_AutoRepath: 1
+  m_Height: 2
+  m_BaseOffset: 0
+  m_WalkableMask: 4294967295
+  m_ObstacleAvoidanceType: 4
 --- !u!1 &7797998835053580639
 GameObject:
   m_ObjectHideFlags: 0

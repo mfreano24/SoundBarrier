@@ -7,6 +7,7 @@ public class SightlineVisualizer : MonoBehaviour
 {
     //public LineRenderer left;
     //public LineRenderer right;
+    public float FOV = 35f;
     public LayerMask lm;
     public Renderer domeRenderer;
     public Light robotLight;
@@ -55,8 +56,8 @@ public class SightlineVisualizer : MonoBehaviour
         mc = GetComponent<MeshCollider>();
 
         mc.sharedMesh = viewMesh;
-        mc.convex = true;
-        mc.isTrigger = true;
+        //mc.convex = true;
+        //mc.isTrigger = true;
 
 
     }
@@ -90,13 +91,13 @@ public class SightlineVisualizer : MonoBehaviour
 
     public void DrawFieldOfView()
     {
-        int stepCount = Mathf.RoundToInt(70f * meshResolution);
-        float stepAngleSize = 70 / stepCount;
+        int stepCount = Mathf.RoundToInt(FOV * 2 * meshResolution);
+        float stepAngleSize = (FOV * 2) / stepCount;
         List<Vector3> viewPoints = new List<Vector3>();
         ViewCastInfo oldViewCast = new ViewCastInfo();
         for(int i = 0; i <= stepCount; i++)
         {
-            float angle = transform.eulerAngles.y - 35f + stepAngleSize * i;
+            float angle = transform.eulerAngles.y - FOV + stepAngleSize * i;
             //Debug.DrawLine(transform.position, transform.position + directionFromAngle(angle, true) * viewRadius, Color.yellow);
             ViewCastInfo newViewCast = ViewCast(angle);
             if(i > 0)

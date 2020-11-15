@@ -753,21 +753,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
-    - target: {fileID: 2189356260788945124, guid: c530d9661884dbd438e4c98c9c141b89,
-        type: 3}
-      propertyPath: m_Layer
-      value: 11
-      objectReference: {fileID: 0}
-    - target: {fileID: 2313273113474528181, guid: c530d9661884dbd438e4c98c9c141b89,
-        type: 3}
-      propertyPath: m_Layer
-      value: 11
-      objectReference: {fileID: 0}
-    - target: {fileID: 2614865892696353686, guid: c530d9661884dbd438e4c98c9c141b89,
-        type: 3}
-      propertyPath: m_Layer
-      value: 11
-      objectReference: {fileID: 0}
     - target: {fileID: 8077837730579511320, guid: c530d9661884dbd438e4c98c9c141b89,
         type: 3}
       propertyPath: IP
@@ -848,21 +833,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player
       objectReference: {fileID: 0}
-    - target: {fileID: 8077837730579511397, guid: c530d9661884dbd438e4c98c9c141b89,
-        type: 3}
-      propertyPath: m_Layer
-      value: 9
-      objectReference: {fileID: 0}
-    - target: {fileID: 8077837731022606189, guid: c530d9661884dbd438e4c98c9c141b89,
-        type: 3}
-      propertyPath: m_CullingMask.m_Bits
-      value: 2359
-      objectReference: {fileID: 0}
-    - target: {fileID: 8077837731784442802, guid: c530d9661884dbd438e4c98c9c141b89,
-        type: 3}
-      propertyPath: m_Layer
-      value: 11
-      objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: c530d9661884dbd438e4c98c9c141b89, type: 3}
 --- !u!114 &329401557 stripped
@@ -875,18 +845,6 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 6852806feff923849bf9e0c677433195, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
---- !u!114 &475375731 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 6219755764647397389, guid: e8043b713737ce5419d43b97f875b533,
-    type: 3}
-  m_PrefabInstance: {fileID: 1081398484}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 5f7201a12d95ffc409449d95f23cf332, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1001 &564263586
@@ -1113,71 +1071,6 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 715187077}
   m_PrefabAsset: {fileID: 0}
---- !u!1 &752666070
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 752666071}
-  - component: {fileID: 752666072}
-  - component: {fileID: 752666073}
-  m_Layer: 0
-  m_Name: CameraTutorialGuide
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 0
---- !u!4 &752666071
-Transform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 752666070}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -9.8, y: 1, z: -5.4}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
-  m_Father: {fileID: 0}
-  m_RootOrder: 9
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!65 &752666072
-BoxCollider:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 752666070}
-  m_Material: {fileID: 0}
-  m_IsTrigger: 1
-  m_Enabled: 1
-  serializedVersion: 2
-  m_Size: {x: 4.41, y: 1, z: 2}
-  m_Center: {x: 0, y: 0, z: 0}
---- !u!114 &752666073
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 752666070}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 648dddc5d266a9a4b891b37bdc69e471, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  textToDisplay:
-  - you can turn off electric barriers with their respectively colored switch.
-  tutorialPosition: {x: 8.07, y: 5.12, z: 10.37}
-  tutorialLookAt: {fileID: 1449091626}
-  mui: {fileID: 1836841580}
-  tutorialContainer: {fileID: 1669338425}
-  textObject: {fileID: 475375731}
-  backPanel: {fileID: 905493772}
 --- !u!1 &797904100
 GameObject:
   m_ObjectHideFlags: 0
@@ -1276,18 +1169,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 4
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &905493772 stripped
-MonoBehaviour:
-  m_CorrespondingSourceObject: {fileID: 3395127209914876604, guid: e8043b713737ce5419d43b97f875b533,
-    type: 3}
-  m_PrefabInstance: {fileID: 1081398484}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!1 &908611522 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 4975962375455332824, guid: f3e6d71e9d97e624b977cd2dc0ee4da0,
@@ -1816,7 +1697,7 @@ PrefabInstance:
     - target: {fileID: 5857100366986091615, guid: d9a1cbf0b28cc6d408585d745c0684b7,
         type: 3}
       propertyPath: clipsSFXInspector.Array.size
-      value: 3
+      value: 4
       objectReference: {fileID: 0}
     - target: {fileID: 5857100366986091615, guid: d9a1cbf0b28cc6d408585d745c0684b7,
         type: 3}
@@ -1833,6 +1714,11 @@ PrefabInstance:
       propertyPath: clipsSFXInspector.Array.data[2]
       value: 
       objectReference: {fileID: 8300000, guid: 970bfc7a91ecb5444a167430786ffa66, type: 3}
+    - target: {fileID: 5857100366986091615, guid: d9a1cbf0b28cc6d408585d745c0684b7,
+        type: 3}
+      propertyPath: clipsSFXInspector.Array.data[3]
+      value: 
+      objectReference: {fileID: 8300000, guid: e9529371659842f41b682788efab13c6, type: 3}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: d9a1cbf0b28cc6d408585d745c0684b7, type: 3}
 --- !u!1001 &1265043293
@@ -2061,36 +1947,6 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 1384876909}
     m_Modifications:
-    - target: {fileID: -3052052926093505668, guid: 41d0f7fbd8205f44cb8dceab8aa5ff22,
-        type: 3}
-      propertyPath: m_Type
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: -3052052926093505668, guid: 41d0f7fbd8205f44cb8dceab8aa5ff22,
-        type: 3}
-      propertyPath: m_Range
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: -3052052926093505668, guid: 41d0f7fbd8205f44cb8dceab8aa5ff22,
-        type: 3}
-      propertyPath: m_Intensity
-      value: 2
-      objectReference: {fileID: 0}
-    - target: {fileID: -3052052926093505668, guid: 41d0f7fbd8205f44cb8dceab8aa5ff22,
-        type: 3}
-      propertyPath: m_Color.r
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -3052052926093505668, guid: 41d0f7fbd8205f44cb8dceab8aa5ff22,
-        type: 3}
-      propertyPath: m_Color.g
-      value: 1
-      objectReference: {fileID: 0}
-    - target: {fileID: -3052052926093505668, guid: 41d0f7fbd8205f44cb8dceab8aa5ff22,
-        type: 3}
-      propertyPath: m_Color.b
-      value: 1
-      objectReference: {fileID: 0}
     - target: {fileID: 3080080879008580682, guid: 41d0f7fbd8205f44cb8dceab8aa5ff22,
         type: 3}
       propertyPath: m_Name
@@ -2104,7 +1960,7 @@ PrefabInstance:
     - target: {fileID: 3080080879008580686, guid: 41d0f7fbd8205f44cb8dceab8aa5ff22,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 2.6
+      value: 2.25
       objectReference: {fileID: 0}
     - target: {fileID: 3080080879008580686, guid: 41d0f7fbd8205f44cb8dceab8aa5ff22,
         type: 3}
@@ -2227,12 +2083,6 @@ Transform:
   m_Father: {fileID: 1384876909}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!1 &1669338425 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 2503170866121292894, guid: e8043b713737ce5419d43b97f875b533,
-    type: 3}
-  m_PrefabInstance: {fileID: 1081398484}
-  m_PrefabAsset: {fileID: 0}
 --- !u!114 &1836841580 stripped
 MonoBehaviour:
   m_CorrespondingSourceObject: {fileID: 791176149, guid: e8043b713737ce5419d43b97f875b533,

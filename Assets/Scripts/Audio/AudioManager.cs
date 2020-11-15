@@ -22,8 +22,8 @@ public class AudioManager : SingletonDDOL<AudioManager>
 
     //any volume settings we have from (0.0f) to (1.0f).
     //assuming settings menu has player prefs for these?
-    float volumeMusic = 1;
-    float volumeSFX = 1;
+    float volumeMusic;
+    float volumeSFX;
 
     bool musicFadeLock = false;
 
@@ -60,6 +60,10 @@ public class AudioManager : SingletonDDOL<AudioManager>
         {
             clipsSFX.Add(aud.name, aud);
         }
+
+        //set according to player preferences.
+        SetMusicVolume();
+        SetSFXVolume();
 
         //begin the sound effect cleanup loop. Works like Update in Monobehaviors.
         StartCoroutine(CleanUpSFX());
@@ -179,7 +183,7 @@ public class AudioManager : SingletonDDOL<AudioManager>
 
     IEnumerator FadeLevelMusic(string oldTrack, string newTrack)
     {
-        Debug.Log("Changing music to: " + newTrack + ".");
+        Debug.Log("Changing music to: " + newTrack + " from track " + oldTrack + ".");
         float interval = clipsMusic[oldTrack].volume / 20.0f;
         for (int i = 0; i < 20; i++)
         {
@@ -190,6 +194,7 @@ public class AudioManager : SingletonDDOL<AudioManager>
         //setting just in case.
         clipsMusic[oldTrack].volume = 0;
         clipsMusic[newTrack].volume = interval * 20.0f;
+        currentMusicName = newTrack; //FIX: set the current music track.
 
     }
 

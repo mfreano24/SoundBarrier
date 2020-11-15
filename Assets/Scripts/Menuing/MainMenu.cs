@@ -7,9 +7,15 @@ public class MainMenu : MonoBehaviour
 {
     public Renderer menuEffectMat;
 
+    public GameObject creditsPanel;
+
+    public Animator blackFadeAnim;
+
     private void Start()
     {
-        
+        //blackFadeAnim.gameObject.SetActive(false); //dont need to bother with fading if its too complicated
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
     }
 
     private void Update()
@@ -19,11 +25,33 @@ public class MainMenu : MonoBehaviour
 
     public void StartGame()
     {
-        SceneManager.LoadScene("Level1");
+        //blackFadeAnim.gameObject.SetActive(true);
+        SceneManager.LoadScene("IntroScene");
     }
 
     public void QuitGame()
     {
         Application.Quit();
+    }
+
+    public void EnableCreditsPanel()
+    {
+
+        creditsPanel.SetActive(true);
+    }
+
+    public void DisableCreditsPanel()
+    {
+        creditsPanel.SetActive(false);
+    }
+
+
+    IEnumerator FadeIntoIntro()
+    {
+        
+        blackFadeAnim.SetTrigger("FadeIn");
+        yield return new WaitForSeconds(1.25f); //NOTE: may need to adjust this one?
+        
+        
     }
 }

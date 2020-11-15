@@ -5,7 +5,6 @@ using UnityEngine;
 
 public class Exit : MonoBehaviour
 {
-
     public GameManager gm;
     public MainUI mui;
     private void OnEnable()
@@ -38,6 +37,7 @@ public class Exit : MonoBehaviour
 
     void endOfLevel()
     {
+        AudioManager.singleton.PlaySFX("teleport"); //see if this works, may need to play delayed?
         Debug.Log("End of Level Trigger Entered!");
         mui.ExitFound();
         gm.playerWin = true;

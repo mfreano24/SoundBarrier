@@ -10,7 +10,7 @@ public class CameraController : MonoBehaviour
     float mouseX, mouseY, xRotation;
     void Start()
     {
-        mouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", 100);
+        mouseSensitivity = 150 * PlayerPrefs.GetFloat("MouseSensitivity", 100) + 0.01f;
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
     }
@@ -18,7 +18,7 @@ public class CameraController : MonoBehaviour
 
     void LateUpdate()
     {
-        mouseSensitivity = PlayerPrefs.GetFloat("MouseSensitivity", 100);
+        mouseSensitivity = 150 * PlayerPrefs.GetFloat("MouseSensitivity", 100) + 0.01f;
         mouseX = Input.GetAxis("Mouse X") * mouseSensitivity * Time.deltaTime;
         mouseY = Input.GetAxis("Mouse Y") * mouseSensitivity * Time.deltaTime;
 

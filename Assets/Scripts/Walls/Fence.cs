@@ -13,7 +13,7 @@ public class Fence : MonoBehaviour
     Material electricity;
 
     public Color matColor;
-    
+    ObjectAudio aud;
     void Awake()
     {
         r = GetComponent<Renderer>();
@@ -21,17 +21,27 @@ public class Fence : MonoBehaviour
         r.material.SetColor("_Color", matColor);
     }
 
+    private void Start()
+    {
+        aud = GetComponent<ObjectAudio>();
+    }
+
     void Update()
     {
         
     }
 
-    public void SendInformationOver()
+    public void ReceiveSwitchOFFSignal()
     {
-
+        aud.PlaySFX("fencepowerDown");
     }
 
-    
+    public void ReceiveSwitchONSignal()
+    {
+        aud.PlaySFX("fencepowerUp");
+    }
 
-    
+
+
+
 }

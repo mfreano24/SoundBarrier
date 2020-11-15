@@ -637,7 +637,7 @@ PrefabInstance:
     - target: {fileID: 3080080879008580686, guid: 41d0f7fbd8205f44cb8dceab8aa5ff22,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 18.07
+      value: 17.25
       objectReference: {fileID: 0}
     - target: {fileID: 3080080879008580686, guid: 41d0f7fbd8205f44cb8dceab8aa5ff22,
         type: 3}
@@ -3109,7 +3109,7 @@ PrefabInstance:
     - target: {fileID: 3080080879008580686, guid: 41d0f7fbd8205f44cb8dceab8aa5ff22,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 18.07
+      value: 17.25
       objectReference: {fileID: 0}
     - target: {fileID: 3080080879008580686, guid: 41d0f7fbd8205f44cb8dceab8aa5ff22,
         type: 3}
@@ -3371,12 +3371,12 @@ PrefabInstance:
     - target: {fileID: 800987597067990676, guid: f3e6d71e9d97e624b977cd2dc0ee4da0,
         type: 3}
       propertyPath: matColor.g
-      value: 0.9667889
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 800987597067990676, guid: f3e6d71e9d97e624b977cd2dc0ee4da0,
         type: 3}
       propertyPath: matColor.b
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 800987597067990676, guid: f3e6d71e9d97e624b977cd2dc0ee4da0,
         type: 3}
@@ -3478,23 +3478,28 @@ PrefabInstance:
     - target: {fileID: 800987597067990676, guid: f3e6d71e9d97e624b977cd2dc0ee4da0,
         type: 3}
       propertyPath: matColor.r
-      value: 0.017004728
+      value: 0.5283019
       objectReference: {fileID: 0}
     - target: {fileID: 800987597067990676, guid: f3e6d71e9d97e624b977cd2dc0ee4da0,
         type: 3}
       propertyPath: matColor.g
-      value: 1
+      value: 0.28608045
       objectReference: {fileID: 0}
     - target: {fileID: 800987597067990676, guid: f3e6d71e9d97e624b977cd2dc0ee4da0,
         type: 3}
       propertyPath: matColor.b
-      value: 0
+      value: 0.44235244
       objectReference: {fileID: 0}
     - target: {fileID: 800987597067990676, guid: f3e6d71e9d97e624b977cd2dc0ee4da0,
         type: 3}
       propertyPath: panelSwitch
       value: 
       objectReference: {fileID: 1431445538}
+    - target: {fileID: 800987597067990676, guid: f3e6d71e9d97e624b977cd2dc0ee4da0,
+        type: 3}
+      propertyPath: matColor.a
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 4975962375455332824, guid: f3e6d71e9d97e624b977cd2dc0ee4da0,
         type: 3}
       propertyPath: m_Name

@@ -6,7 +6,7 @@ public class FenceSwitchPanel : MonoBehaviour
 {
     Material fenceMat;
     public GameObject fence; //NOTE: Adapt this for multiple fences at once so that it becomes more of a switch.
-
+    Fence f;
     Renderer r;
 
     PlayerController pc;
@@ -15,6 +15,8 @@ public class FenceSwitchPanel : MonoBehaviour
 
     public MainUI mui;
 
+    ObjectAudio aud;
+
     void Start()
     {
         r = GetComponent<Renderer>();
@@ -22,6 +24,8 @@ public class FenceSwitchPanel : MonoBehaviour
         fenceMat = fence.GetComponent<Renderer>().material;
         r.material.color = fenceMat.GetColor("_Color"); //set the color of this switch to the fence's electricity color!
         fenceOn = r.material.color; //store the original color of the fence for later.
+        f = fence.GetComponent<Fence>();
+        aud = GetComponent<ObjectAudio>();
     }
 
     void Update()
@@ -37,7 +41,7 @@ public class FenceSwitchPanel : MonoBehaviour
 
     public IEnumerator TurnOn()
     {
-
+        f.ReceiveSwitchONSignal();
         fence.SetActive(true);
         for (int i = 0; i < 30; i++)
         {
@@ -58,6 +62,7 @@ public class FenceSwitchPanel : MonoBehaviour
 
     public IEnumerator TurnOff()
     {
+        f.ReceiveSwitchOFFSignal();
         for (int i = 0; i < 30; i++)
         {
             fenceMat.SetFloat("_Strength", fenceMat.GetFloat("_Strength") - 0.1f);
@@ -69,6 +74,7 @@ public class FenceSwitchPanel : MonoBehaviour
 
     public void HandlePlayerInteraction()
     {
+        aud.PlaySFX("ButtonPress");
         if (fence.activeInHierarchy)
         {
             Debug.Log("Turning off fence...");

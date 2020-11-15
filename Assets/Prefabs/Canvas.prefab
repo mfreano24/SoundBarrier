@@ -516,6 +516,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4eb388637528ce84a904cc9e5e9c8007, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  FLOOR: {fileID: 100043018}
   floorNumber: {fileID: 1239456146}
   playerMarker: {fileID: 1489270648}
 --- !u!1 &357794196
@@ -1058,6 +1059,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4eb388637528ce84a904cc9e5e9c8007, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  FLOOR: {fileID: 1688743990}
   floorNumber: {fileID: 295468942}
   playerMarker: {fileID: 162548206}
 --- !u!1 &663641666

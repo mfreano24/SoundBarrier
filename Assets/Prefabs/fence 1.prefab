@@ -13,6 +13,7 @@ GameObject:
   - component: {fileID: 4975962375455332831}
   - component: {fileID: 4975962375455332830}
   - component: {fileID: 800987597067990676}
+  - component: {fileID: 4212486957682666889}
   m_Layer: 8
   m_Name: fence 1
   m_TagString: Untagged
@@ -109,3 +110,20 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   panelSwitch: {fileID: 0}
+  matColor: {r: 0, g: 0, b: 0, a: 0}
+--- !u!114 &4212486957682666889
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4975962375455332824}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 245d7286717354a4a801bef05b5a6130, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  clipsInspector:
+  - {fileID: 8300000, guid: 129261376a2a5444194fba62f937bbd2, type: 3}
+  - {fileID: 8300000, guid: 19cb02f681701d947b216c6c75fc43e8, type: 3}
+  isDiegetic: 1

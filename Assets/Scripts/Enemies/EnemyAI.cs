@@ -1,7 +1,7 @@
-﻿using UnityEngine;
+﻿using System.Collections;
+using UnityEngine;
 using UnityEngine.AI;
 using UnityEngine.UI;
-using System.Collections;
 
 
 public class EnemyAI : MonoBehaviour
@@ -17,13 +17,16 @@ public class EnemyAI : MonoBehaviour
     public Vector3[] patrol; //assign this through the editor.
     public Text textDebug;
 
-
+    float noPathAvailableStep = 3.0f;
+    float noPathAvailableCurrent = 0.0f;
     int patrolIndex;
 
     bool shooting = false;
     bool DoubleShotBuffer = false;
     Vector3 investigationPoint, NULL_IP; //assign to this point whenever a reason to investigate is triggered.
     NavMeshAgent nav;
+
+    public NavMeshAgent childNav; //the second nav that we'll use to calculate all the pathways
 
     int state = 0;
     // STATE 0 = "Patrolling"
@@ -35,7 +38,9 @@ public class EnemyAI : MonoBehaviour
 
     InvestigationPoint IP;
 
-    
+    Vector3 singlePointEulerRotation;
+
+    ObjectAudio aud;
 
     void Awake()
     {
@@ -46,7 +51,7 @@ public class EnemyAI : MonoBehaviour
         }
         */
         nav = GetComponent<NavMeshAgent>();
-        if(patrol.Length > 1)
+        if (patrol.Length > 1)
         {
             patrolIndex = Random.Range(1, patrol.Length - 1); //just start somewhere.
             transform.position = patrol[patrolIndex - 1]; //assign it so we arent travelling randomly
@@ -54,14 +59,16 @@ public class EnemyAI : MonoBehaviour
         }
         else
         {
-            //dont need to do anything i guess?
+            singlePointEulerRotation = transform.eulerAngles; //store current rotation for later
         }
-        
+
         investigationPoint = new Vector3(-999, -999, -999); //Going off of the sheer confidence that this value won't be an investigation point?
         //watch it be, you silly man
         NULL_IP = investigationPoint;
         //TODO: may need to change that, because Vector3s are *not* nullable.
         IP = transform.parent.GetComponentInChildren<InvestigationPoint>();
+        aud = GetComponent<ObjectAudio>();
+
 
     }
 
@@ -71,10 +78,10 @@ public class EnemyAI : MonoBehaviour
         Gizmos.color = Color.magenta;
         foreach (Vector3 p in patrol)
         {
-            
-            Gizmos.DrawCube(p, new Vector3(1f,1f,1f));
+
+            Gizmos.DrawCube(p, new Vector3(1f, 1f, 1f));
         }
-        for(int i = 1; i < patrol.Length; i++)
+        for (int i = 1; i < patrol.Length; i++)
         {
             Gizmos.DrawLine(patrol[i - 1], patrol[i]);
         }
@@ -92,6 +99,7 @@ public class EnemyAI : MonoBehaviour
         pEffects = pHealth.gameObject.GetComponent<PlayerEffects>();
         viz.CurrentColor = Color.green;
         StartCoroutine(Shoot());
+        childNav.speed = 0; //stop the childnav from actually travelling anywhere, just need to compute pathways with it
     }
 
     void Update()
@@ -123,6 +131,7 @@ public class EnemyAI : MonoBehaviour
         //Debug.Log("Enemy " + (PlayerVisible() ? "can see " : "cannot see ") + "the player. pHealth.dead == " + pHealth.dead + " and shooting == " + shooting);
         if (PlayerVisible() && !pHealth.dead && state != 2)
         {
+            aud.PlaySFX("enemyAlerted");
             state = 2;
             nav.SetDestination(transform.position);
             viz.CurrentColor = Color.red;
@@ -142,28 +151,52 @@ public class EnemyAI : MonoBehaviour
                 //reset to 0 to accomodate the path
                 patrolIndex = 0;
             }
-            if(patrol.Length > 1)
+
+            if (patrol.Length > 1)
             {
                 Debug.Log("Point reached! Patrol Index is now: " + patrolIndex + ".");
                 nav.SetDestination(patrol[patrolIndex]);
             }
-            
+            else if (transform.eulerAngles != singlePointEulerRotation)
+            {
+                transform.eulerAngles = singlePointEulerRotation; //return the robot's rotation to its standard.
+            }
         }
-        else
-        {
-            //Debug.Log("Current distance to next checkpoint = " + Vector3.Distance(transform.position, patrol[patrolIndex]));
-        }
-
     }
 
     void InvestigateUpdate()
     {
         if (Vector3.Equals(NULL_IP, investigationPoint))
         {
+            aud.PlaySFX("enemyPatrol");
             state = 0; //if the player hasnt been seen and we're in this state still, just go back to patrolling.
             nav.SetDestination(GetClosestPatrolPoint());
             viz.CurrentColor = Color.green;
         }
+        Debug.Log("Current nav mesh velocity == " + nav.velocity);
+        if (nav.velocity.magnitude < 0.25f)
+        {
+            if (noPathAvailableCurrent >= noPathAvailableStep)
+            {
+                aud.PlaySFX("enemyPatrol");
+                noPathAvailableCurrent = 0;
+                state = 0; //if the player hasnt been seen and we're in this state still, just go back to patrolling.
+                nav.SetDestination(GetClosestPatrolPoint());
+                viz.CurrentColor = Color.green;
+            }
+            else
+            {
+                noPathAvailableCurrent += Time.deltaTime;
+            }
+        }
+        else
+        {
+            if (noPathAvailableCurrent != 0)
+            {
+                noPathAvailableCurrent = 0;
+            }
+        }
+
 
     }
 
@@ -172,24 +205,26 @@ public class EnemyAI : MonoBehaviour
         if (!PlayerVisible())
         {
             Debug.Log("Player isn't visible anymore.");
+            aud.PlaySFX("enemyInvestigating");
             state = 1;
             viz.CurrentColor = Color.yellow;
             pcScript.InvestigationPointCallback(this);
-            
+
         }
     }
 
     IEnumerator Shoot()
     {
-        float shootStep = 0.75f;
+        float shootStep = 0.35f;
         float shootTimer = 0.0f;
         while (true)
         {
-            
+
             if (state == 2)
             {
-                if(shootTimer >= shootStep)
+                if (shootTimer >= shootStep)
                 {
+                    aud.PlaySFX("enemyGun");
                     ps.Play();
                     pHealth.TakeDamage(TESTGunDamage);
                     StartCoroutine(pEffects.BloodFlash());
@@ -199,7 +234,7 @@ public class EnemyAI : MonoBehaviour
                 {
                     shootTimer += Time.deltaTime;
                 }
-                
+
             }
             else
             {
@@ -214,9 +249,9 @@ public class EnemyAI : MonoBehaviour
     {
         //viz.DrawFieldOfView();
         RaycastHit hit;
-        if ((Physics.Raycast(transform.position, player.position - transform.position, out hit, 
-            Vector3.Distance(transform.position, player.position) + 0.01f, lm) 
-            || pcScript.cloaked)&& transform.position.y - player.position.y < 10.0f)
+        if ((Physics.Raycast(transform.position, player.position - transform.position, out hit,
+            Vector3.Distance(transform.position, player.position) + 0.01f, lm)
+            || pcScript.cloaked) && transform.position.y - player.position.y < 10.0f)
         {
             Debug.DrawRay(transform.position, hit.point - transform.position, Color.red);
             return false;
@@ -227,10 +262,10 @@ public class EnemyAI : MonoBehaviour
             return PlayerInFront() && Vector3.Distance(transform.position, player.position) <= 22.5f; //efficiency, so that PIF only runs here.
             //they dont need to have all seeing vision otherwise the player may have trouble seeing them when they get spotted!
         }
-        
+
     }
 
-    
+
 
     bool PlayerInFront()
     {
@@ -243,13 +278,14 @@ public class EnemyAI : MonoBehaviour
     {
         //change state to investigative and begin navMeshing towards the point passed in.
         //if an investigation point already exists, just replace it, freshest sounds first!
-        if(Mathf.Abs(_investigationPoint.y - transform.position.y) <= 6f)
+        if (Mathf.Abs(_investigationPoint.y - transform.position.y) <= 6f)
         {
             //Debug.Log("Investigation Point " + _investigationPoint + " has reached enemy.");
             Debug.Log("Difference in Y positions: " + (_investigationPoint.y - transform.position.y));
             investigationPoint = _investigationPoint;
             if (state != 2)
             {
+                aud.PlaySFX("enemyInvestigating");
                 state = 1;
                 viz.CurrentColor = Color.yellow;
                 nav.SetDestination(investigationPoint);
@@ -259,8 +295,8 @@ public class EnemyAI : MonoBehaviour
         {
             Debug.Log("Difference in Y positions: " + (_investigationPoint.y - transform.position.y));
         }
-        
-        
+
+
     }
 
     public void ResetIP(Vector3 _reset)
@@ -271,6 +307,7 @@ public class EnemyAI : MonoBehaviour
         if (state != 2)
         {
             Debug.Log("Return to normalcy.");
+            aud.PlaySFX("enemyPatrol");
             state = 0;
             viz.CurrentColor = Color.green;
             nav.SetDestination(GetClosestPatrolPoint());
@@ -279,21 +316,25 @@ public class EnemyAI : MonoBehaviour
         {
             Debug.Log("State is 2. Something is wrong.");
         }
-        
+
     }
 
     Vector3 GetClosestPatrolPoint()
     {
-        Vector3 ret = new Vector3(0, 0, 0);
+        //capture the remaining distance to all n patrol points
+        //based on path distance, not actual distance.
         float min = float.MaxValue;
-        for(int i = 0; i < patrol.Length; i++)
+        int minIndex = 0;
+        for (int i = 0; i < patrol.Length; i++)
         {
-            if(Vector3.Distance(patrol[i],transform.position) < min)
+            childNav.SetDestination(patrol[i]);
+            if(childNav.remainingDistance < min)
             {
-                ret = patrol[i];
-                patrolIndex = i;
+                minIndex = i;
+                min = childNav.remainingDistance;
             }
         }
-        return ret;
+        patrolIndex = minIndex;
+        return patrol[patrolIndex];
     }
 }

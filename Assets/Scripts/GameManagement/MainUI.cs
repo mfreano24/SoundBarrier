@@ -43,9 +43,9 @@ public class MainUI : MonoBehaviour
         pauseLayerScreen.SetActive(false);
         settingsMenu.SetActive(false);
         //set them all to halfway exactly.
-        musicVolumeSlider.normalizedValue = 0.5f;
-        sfxVolumeSlider.normalizedValue = 0.5f;
-        mouseSensitivitySlider.normalizedValue = 0.5f;
+        musicVolumeSlider.normalizedValue = PlayerPrefs.GetFloat("musicSliderValue", 0.5f);
+        sfxVolumeSlider.normalizedValue = PlayerPrefs.GetFloat("sfxSliderValue", 0.5f);
+        mouseSensitivitySlider.normalizedValue = PlayerPrefs.GetFloat("MouseSensitivity", 0.5f);
         mouseSensitivitySlider.onValueChanged.AddListener(delegate { ChangeMouseSensitivity(); });
         musicVolumeSlider.onValueChanged.AddListener(delegate { ChangeMusicVolume(); });
         sfxVolumeSlider.onValueChanged.AddListener(delegate { ChangeSFXVolume(); });
@@ -147,13 +147,13 @@ public class MainUI : MonoBehaviour
     }
 
 
-    public void ToggleHUD()
+    public void ToggleHUD(bool _toggleTo)
     {
-        bool set = !(cloakImage.activeInHierarchy);
-        cloakImage.SetActive(set);
-        healthImage.SetActive(set);
-        crosshair.SetActive(set);
-        promptContainer.SetActive(set);
+        Debug.Log("Toggling main HUD elements to " + _toggleTo + ".");
+        cloakImage.SetActive(_toggleTo);
+        healthImage.SetActive(_toggleTo);
+        crosshair.SetActive(_toggleTo);
+        //promptContainer.SetActive(!_toggleTo);
     }
 
     void ChangeMusicVolume()
@@ -172,7 +172,7 @@ public class MainUI : MonoBehaviour
     void ChangeMouseSensitivity()
     {
         Debug.Log("Setting mouse sensitivity to VALUE " + 150 * (mouseSensitivitySlider.normalizedValue + 0.01f) + ".");
-        PlayerPrefs.SetFloat("MouseSensitivity", 150 * (mouseSensitivitySlider.normalizedValue + 0.01f));
+        PlayerPrefs.SetFloat("MouseSensitivity", mouseSensitivitySlider.normalizedValue);
     }
 
     public void SetFloorNumberText(int _floorNumber)

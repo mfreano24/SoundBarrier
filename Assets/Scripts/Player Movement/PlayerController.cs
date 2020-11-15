@@ -31,6 +31,8 @@ public class PlayerController : MonoBehaviour
 
     public Image cloakSlider;
 
+    bool decloakInProgress = false;
+
     
     [Header("Extraneous Objects")]
     public ParticleSystem muzzlePS;
@@ -47,6 +49,9 @@ public class PlayerController : MonoBehaviour
     
     public bool inSwitchRange = false;
     FenceSwitchPanel currentFSP;
+
+    //AudioSource aud; //walking/running
+    ObjectAudio aud;
 
     private void OnEnable()
     {
@@ -65,6 +70,7 @@ public class PlayerController : MonoBehaviour
         cc = GetComponent<CharacterController>();
         groundCheck.localPosition = new Vector3(0, -cc.bounds.extents.y, 0);
         phealth = GetComponent<PlayerHealth>();
+        aud = GetComponent<ObjectAudio>();
 
     }
 
@@ -145,6 +151,7 @@ public class PlayerController : MonoBehaviour
             {
                 cooldown = true;
                 cloakfizzle.Play();
+                aud.PlaySFX("decloak");
                 StartCoroutine(decloak());
             }
         }
@@ -171,6 +178,7 @@ public class PlayerController : MonoBehaviour
             StopCoroutine(decloak()); //if in the middle of a process, interrupt it and reverse. 
             //This will allow for quick decision making on the player's part if new information becomes apparent mid-cloak.
             cloakfizzle.Play();
+            aud.PlaySFX("cloak");
             StartCoroutine(cloak());
 
         }
@@ -178,6 +186,7 @@ public class PlayerController : MonoBehaviour
         {
             cloakfizzle.Play();
             StopCoroutine(cloak());
+            aud.PlaySFX("decloak");
             StartCoroutine(decloak());
             //investigation points
 
@@ -240,27 +249,30 @@ public class PlayerController : MonoBehaviour
         float val = 0.01f;
         for (int i = 0; i < 100; i++)
         {
-            yield return new WaitForSeconds(0.001f);
-            dissolveMat.SetFloat("Vector1_2F06040B", val);
-            val += 0.01f;
+            if (!decloakInProgress)
+            {
+                //fully ignore this thread if there's a decloak in progress.
+                yield return new WaitForSeconds(0.005f);
+                dissolveMat.SetFloat("Vector1_2F06040B", val);
+                val += 0.01f;
+            }
+            
         }
-
-
-        yield return null;
     }
 
     IEnumerator decloak()
     {
+        decloakInProgress = true; //act as sort of an interrupting mutex for the cloaking process.
         cloaked = false;
         float val = 0.99f;
         for (int i = 0; i < 100; i++)
         {
-            yield return new WaitForSeconds(0.01f);
+            yield return new WaitForSeconds(0.005f);
             dissolveMat.SetFloat("Vector1_2F06040B", val);
             val -= 0.01f;
         }
 
-        yield return null;
+        decloakInProgress = false;
 
     }
 

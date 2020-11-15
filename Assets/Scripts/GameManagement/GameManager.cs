@@ -79,24 +79,35 @@ public class GameManager : MonoBehaviour
             Debug.Log("The player got to the exit!");
             CURRENT_LEVEL++; //advance to the next level.
             mui.SetFloorNumberText(CURRENT_LEVEL);
-            if (CURRENT_LEVEL > 10)
+            if (CURRENT_LEVEL > 8)
             {
                 //call the ending and dont return.
-
+                endOfGame = true;
                 Debug.Log("winnar");
+                
             }
-            //pre wait, such as an animation to go up or something, idk
+            
             yield return PostLevel;
         }
         else
         {
-            //pre wait: "you died", voice message saying bro wtf
+            //pre wait: "you died"
             yield return PostLevel;
         }
 
-        //load the current level scene.
-        Debug.Log("Loading level " + CURRENT_LEVEL);
-        SceneManager.LoadScene("Level" + CURRENT_LEVEL);
+
+        if (!endOfGame)
+        {
+            //load the current level scene.
+            Debug.Log("Loading level " + CURRENT_LEVEL);
+            SceneManager.LoadScene("Level" + CURRENT_LEVEL);
+        }
+        else
+        {
+            Debug.Log("Load scene 'ending'.");
+            SceneManager.LoadScene("OutroScene"); //tha end B)
+        }
+        
         
     }
 
@@ -105,6 +116,7 @@ public class GameManager : MonoBehaviour
         if(scene.name[0] == 'L')
         {
             //we're in a level because i named the scenes that way
+            Debug.Log("SCENE NUMBER == " + scene.name[scene.name.Length - 1]);
             switch (scene.name[scene.name.Length - 1])
             {
                 case '1': AudioManager.singleton.PlayLevelMusic("Level1_2", true); break;
