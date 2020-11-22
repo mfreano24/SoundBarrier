@@ -1,14 +1,13 @@
-﻿using System.Collections;
-using System.Collections.Generic;
-using UnityEngine;
+﻿using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public class PlayerHealth : MonoBehaviour
 {
     public Image healthBar;
     [HideInInspector]
     public bool dead;
+    [HideInInspector]
+    public bool safe;
 
     float maxHealth = 300.0f;
     float currentHealth;
@@ -16,14 +15,21 @@ public class PlayerHealth : MonoBehaviour
     bool damageCooldown;
     float damageCooldownProgress = 0.00f;
     float damageCooldownStep = 2.50f;
-    float damageRecoveryRate = -1.00f; //MUST BE NEGATIVE!
+    float damageRecoveryRate = -0.50f; //MUST BE NEGATIVE!
+
+    PlayerEffects pEffects;
+    FootstepAudio feet;
 
 
     public GameManager gm;
     void Start()
     {
+        pEffects = GetComponent<PlayerEffects>();
+        safe = false;
         dead = false;
-        currentHealth = maxHealth;  
+        currentHealth = maxHealth;
+        feet = GetComponent<FootstepAudio>();
+        feet.UnmuteFeet();
     }
 
     private void OnEnable()
@@ -38,17 +44,16 @@ public class PlayerHealth : MonoBehaviour
         if (damageCooldown)
         {
             damageCooldownProgress += Time.deltaTime;
-            if(damageCooldownProgress >= damageCooldownStep)
+            if (damageCooldownProgress >= damageCooldownStep)
             {
                 damageCooldown = false;
             }
         }
-        else if(currentHealth < maxHealth)
+        else if (currentHealth < maxHealth && !dead)
         {
-            
             TakeDamage(damageRecoveryRate);
         }
-        else if(currentHealth > maxHealth)
+        else if (currentHealth > maxHealth)
         {
             currentHealth = maxHealth;
         }
@@ -57,12 +62,12 @@ public class PlayerHealth : MonoBehaviour
     public void TakeDamage(float amt)
     {
         //TODO: add red vignette flash
-        if(amt > 0)
+        if (amt > 0)
         {
             damageCooldownProgress = 0;
             damageCooldown = true;
         }
-        
+
         currentHealth -= amt;
         UpdateHealthUI();
         if (currentHealth <= 0f)
@@ -71,7 +76,7 @@ public class PlayerHealth : MonoBehaviour
 
             Die();
         }
-        
+
     }
     void UpdateHealthUI()
     {
@@ -83,16 +88,26 @@ public class PlayerHealth : MonoBehaviour
         if (!dead)
         {
             //fade out and reset the current scene.
-            
+
             gm.playerWin = false;
             gm.roundOver = true;
-            
+
             Debug.Log("you are dead.");
             transform.Rotate(0, 0, 90);
+
+            AudioManager.singleton.PlaySFX("death");
+            feet.MuteFeet();
+            StartCoroutine(pEffects.FadeToDeath());
             dead = true;
-            
+
         }
-        
+
+    }
+
+    public void ExitImmunity()
+    {
+        //end of level sight immunity.
+        safe = true;
     }
 
 

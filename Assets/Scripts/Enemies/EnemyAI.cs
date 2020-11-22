@@ -97,7 +97,7 @@ public class EnemyAI : MonoBehaviour
     {
         //viz = GetComponent<SightlineVisualizer>(); //these should be on the same object, right?
         pEffects = pHealth.gameObject.GetComponent<PlayerEffects>();
-        viz.CurrentColor = Color.green;
+        viz.CurrentColor = new Color(252f/255f, 215f/255f, 3f/255f);
         StartCoroutine(Shoot());
         childNav.speed = 0; //stop the childnav from actually travelling anywhere, just need to compute pathways with it
     }
@@ -171,7 +171,7 @@ public class EnemyAI : MonoBehaviour
             aud.PlaySFX("enemyPatrol");
             state = 0; //if the player hasnt been seen and we're in this state still, just go back to patrolling.
             nav.SetDestination(GetClosestPatrolPoint());
-            viz.CurrentColor = Color.green;
+            viz.CurrentColor = new Color(252f/255f, 215f/255f, 3f/255f);
         }
         Debug.Log("Current nav mesh velocity == " + nav.velocity);
         if (nav.velocity.magnitude < 0.25f)
@@ -182,7 +182,7 @@ public class EnemyAI : MonoBehaviour
                 noPathAvailableCurrent = 0;
                 state = 0; //if the player hasnt been seen and we're in this state still, just go back to patrolling.
                 nav.SetDestination(GetClosestPatrolPoint());
-                viz.CurrentColor = Color.green;
+                viz.CurrentColor = new Color(252f/255f, 215f/255f, 3f/255f);
             }
             else
             {
@@ -207,7 +207,7 @@ public class EnemyAI : MonoBehaviour
             Debug.Log("Player isn't visible anymore.");
             aud.PlaySFX("enemyInvestigating");
             state = 1;
-            viz.CurrentColor = Color.yellow;
+            viz.CurrentColor = new Color(252f/255f, 132f/255f, 0);
             pcScript.InvestigationPointCallback(this);
 
         }
@@ -222,7 +222,7 @@ public class EnemyAI : MonoBehaviour
 
             if (state == 2)
             {
-                if (shootTimer >= shootStep)
+                if (shootTimer >= shootStep && !pHealth.dead)
                 {
                     aud.PlaySFX("enemyGun");
                     ps.Play();
@@ -270,8 +270,9 @@ public class EnemyAI : MonoBehaviour
     bool PlayerInFront()
     {
         //Debug.LogWarning(Vector3.Angle(transform.forward, player.position - transform.position) + "\t"+(Vector3.Angle(transform.forward, player.position - transform.position) < 90.0f ? "Player is in front" : "Player is behind"));
-        return (Vector3.Angle(transform.forward, player.position - transform.position) < 35.0f);
+        return (Vector3.Angle(transform.forward, player.position - transform.position) < 30.0f) && (!pHealth.safe);
         //this works, dont touch it! please. god.
+        //i had to touch it! hahaha
     }
 
     public void NoiseAlert(Vector3 _investigationPoint, InvestigationPoint _IP)
@@ -287,7 +288,7 @@ public class EnemyAI : MonoBehaviour
             {
                 aud.PlaySFX("enemyInvestigating");
                 state = 1;
-                viz.CurrentColor = Color.yellow;
+                viz.CurrentColor = new Color(252f/255f, 132f/255f, 0);
                 nav.SetDestination(investigationPoint);
             }
         }
@@ -309,7 +310,7 @@ public class EnemyAI : MonoBehaviour
             Debug.Log("Return to normalcy.");
             aud.PlaySFX("enemyPatrol");
             state = 0;
-            viz.CurrentColor = Color.green;
+            viz.CurrentColor = new Color(252f/255f, 215f/255f, 3f/255f);
             nav.SetDestination(GetClosestPatrolPoint());
         }
         else

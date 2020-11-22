@@ -1,4 +1,5 @@
 ﻿using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -17,12 +18,12 @@ public class PlayerController : MonoBehaviour
     CharacterController cc;
     bool isGrounded;
     [SerializeField]
-    float cloakTimer = 5.0f;
+    float cloakTimer = 7.5f;
 
     [Header("EnemyRelations")]
     public IPManager IP;
 
-    public bool cloaked = false, cooldown = false;
+    public bool cloaked = false, cooldown = false, emptyRecover = false;
     //debug
     public Material dissolveMat; //this material should ONLY be on the player and absolutely nothing else.
 
@@ -32,8 +33,9 @@ public class PlayerController : MonoBehaviour
     public Image cloakSlider;
 
     bool decloakInProgress = false;
+    bool cloakInProgress = true;
 
-    
+
     [Header("Extraneous Objects")]
     public ParticleSystem muzzlePS;
     public ParticleSystem cloakfizzle;
@@ -46,12 +48,17 @@ public class PlayerController : MonoBehaviour
     bool canFire = true;
     bool sprinting = false;
     bool enemyAlerted = false;
-    
+
     public bool inSwitchRange = false;
     FenceSwitchPanel currentFSP;
 
     //AudioSource aud; //walking/running
     ObjectAudio aud;
+
+    float sprintActivateStep = 2.5f;
+    float sprintActivateCurrent = 0.0f;
+
+    List<Coroutine> cloakingCoroutines;
 
     private void OnEnable()
     {
@@ -71,6 +78,7 @@ public class PlayerController : MonoBehaviour
         groundCheck.localPosition = new Vector3(0, -cc.bounds.extents.y, 0);
         phealth = GetComponent<PlayerHealth>();
         aud = GetComponent<ObjectAudio>();
+        cloakingCoroutines = new List<Coroutine>();
 
     }
 
@@ -79,26 +87,20 @@ public class PlayerController : MonoBehaviour
         //MOVEMENT
         isGrounded = Physics.CheckSphere(groundCheck.position, groundDist, groundLM);
 
-        if (Input.GetKey(KeyCode.LeftShift))
+        if (Input.GetKey(KeyCode.LeftShift) && moving)
         {
+            //check if we're moving as well because otherwise you could alert an enemy standing still???????/
+            //NOTE: work on this- it works for now tho lmao
             if (canFire && !sprinting)
             {
+                //BEGINNING OF SPRINT
                 gunAnim.SetTrigger("SprintStart");
                 canFire = false;
                 sprinting = true;
             }
-            //re-activate the investigation point every frame UNTIL it catches someone.
-            if (!enemyAlerted)
-            {
-                //need a case to reset this thing but like, if you activate this you're probably going to get shot.
-                //this is working kind of weird. maybe if we fix it from this perspective it will be less disruptive.
-                //enemyAlerted = IP.NoiseActivate(5f, transform.position);
-            }
-            else
-            {
-                Debug.Log("Enemy is aware of your sprinting and would like to hurt you.");
-            }
-            playerSpeed = 0.2f;
+
+
+            playerSpeed = 12.5f;
         }
         else
         {
@@ -107,9 +109,11 @@ public class PlayerController : MonoBehaviour
                 gunAnim.SetTrigger("SprintEnd");
                 canFire = true;
                 sprinting = false;
+                sprintActivateCurrent = 2.5f; //set to step so that we can immediately alert an anemy next time(???????)
+                //issue: if the player stops sprintng and starts again this triggers multiple alerts
             }
 
-            playerSpeed = 0.1f;
+            playerSpeed = 7.5f;
         }
 
 
@@ -117,6 +121,7 @@ public class PlayerController : MonoBehaviour
         {
             vel.y = -2;
         }
+
         if (!phealth.dead)
         {
             xInput = Input.GetAxis("Horizontal");
@@ -134,7 +139,7 @@ public class PlayerController : MonoBehaviour
             {
                 moving = false;
             }
-            cc.Move(playerSpeed * moveDirection);
+            cc.Move(playerSpeed * moveDirection * Time.deltaTime);
 
             vel.y += gravity * Time.deltaTime;
 
@@ -149,18 +154,31 @@ public class PlayerController : MonoBehaviour
             cloakTimer -= Time.deltaTime;
             if (cloakTimer < 0.15f)
             {
+                emptyRecover = true;
                 cooldown = true;
                 cloakfizzle.Play();
+                //LAST MINUTE CHANGE HENCE THE TWO DIFFERENT AUDIO OBJECTS
                 aud.PlaySFX("decloak");
-                StartCoroutine(decloak());
+                AudioManager.singleton.PlaySFX("unpause",2f);
+                foreach (Coroutine c in cloakingCoroutines)
+                {
+                    StopCoroutine(c);
+                }
+                cloakingCoroutines.Clear();
+                cloakingCoroutines.Add(StartCoroutine(decloak(true)));
             }
         }
-        else if (cloakTimer < 5.00f)
+        else if (cloakTimer < 5.0f)
         {
             cloakTimer += Time.deltaTime;
-            if (cloakTimer > 5.00f)
+            if (cloakTimer > 5.0f)
             {
-                cloakTimer = 5.00f;
+                if (emptyRecover)
+                {
+                    AudioManager.singleton.PlaySFX("pause", .75f);
+                    emptyRecover = false;
+                }
+                cloakTimer = 5.0f;
             }
         }
         else if (!cloaked && cooldown)
@@ -168,26 +186,44 @@ public class PlayerController : MonoBehaviour
             //if the cooldown is finished
             cooldown = false;
         }
+        else if(cloakTimer > 5.0f)
+        {
+            cloakTimer = 5.0f;
+            //fallback
+        }
 
         //UPDATE VALUES
         cloakSlider.fillAmount = cloakTimer / 5.0f;
+        if(cloakSlider.fillAmount >= 1.0f)
+        {
+            cloakSlider.color = new Color(0, 1, 1);
+        }
 
         //INPUT
         if (Input.GetMouseButtonDown(1) && !cloaked && !cooldown)
         {
-            StopCoroutine(decloak()); //if in the middle of a process, interrupt it and reverse. 
+            //StopCoroutine(decloak()); //if in the middle of a process, interrupt it and reverse. 
             //This will allow for quick decision making on the player's part if new information becomes apparent mid-cloak.
             cloakfizzle.Play();
             aud.PlaySFX("cloak");
-            StartCoroutine(cloak());
+            foreach (Coroutine c in cloakingCoroutines)
+            {
+                StopCoroutine(c);
+            }
+            cloakingCoroutines.Clear();
+            cloakingCoroutines.Add(StartCoroutine(cloak()));
 
         }
         else if (Input.GetMouseButtonDown(1) && !cooldown)
         {
             cloakfizzle.Play();
-            StopCoroutine(cloak());
             aud.PlaySFX("decloak");
-            StartCoroutine(decloak());
+            foreach (Coroutine c in cloakingCoroutines)
+            {
+                StopCoroutine(c);
+            }
+            cloakingCoroutines.Clear();
+            cloakingCoroutines.Add(StartCoroutine(decloak(false)));
             //investigation points
 
             IP.NoiseActivate(5, transform.position);
@@ -209,7 +245,7 @@ public class PlayerController : MonoBehaviour
                 wallHitPS.gameObject.transform.position = hit.point;
                 wallHitPS.Play();
                 Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * 10.0f, Color.green, 0.5f);
-                if(wScript != null)
+                if (wScript != null)
                 {
                     wScript.WallReactionHelper();
                 }
@@ -217,7 +253,7 @@ public class PlayerController : MonoBehaviour
                 {
                     Debug.Log("Could not find a wall collider on game object called " + hit.collider.gameObject);
                 }
-                
+
                 Debug.Log("successful hit!");
             }
             else
@@ -245,23 +281,26 @@ public class PlayerController : MonoBehaviour
 
     IEnumerator cloak()
     {
+        cloakInProgress = true;
         cloaked = true;
         float val = 0.01f;
         for (int i = 0; i < 100; i++)
         {
-            if (!decloakInProgress)
-            {
-                //fully ignore this thread if there's a decloak in progress.
-                yield return new WaitForSeconds(0.005f);
-                dissolveMat.SetFloat("Vector1_2F06040B", val);
-                val += 0.01f;
-            }
-            
+            //fully ignore this thread if there's a decloak in progress.
+            yield return new WaitForSeconds(0.005f);
+            dissolveMat.SetFloat("Vector1_2F06040B", val);
+            val += 0.01f;
         }
+        cloakInProgress = false;
     }
 
-    IEnumerator decloak()
+    IEnumerator decloak(bool timerOut)
     {
+        if (timerOut)
+        {
+            //make the cloak slider bad color
+            cloakSlider.color = new Color(37f/255f, 54f/255f, 54f/ 255f);
+        }
         decloakInProgress = true; //act as sort of an interrupting mutex for the cloaking process.
         cloaked = false;
         float val = 0.99f;
@@ -270,9 +309,11 @@ public class PlayerController : MonoBehaviour
             yield return new WaitForSeconds(0.005f);
             dissolveMat.SetFloat("Vector1_2F06040B", val);
             val -= 0.01f;
+
         }
 
         decloakInProgress = false;
+        
 
     }
 
@@ -286,8 +327,8 @@ public class PlayerController : MonoBehaviour
         yield return new WaitForSeconds(0.3f);
         AudioManager.singleton.PlaySFX("GunReload");
         Debug.Log("Reload!");
-        
-        yield return new WaitForSeconds(1f);
+
+        yield return new WaitForSeconds(.65f);
 
         Debug.Log("Ready to fire.");
         canFire = true;

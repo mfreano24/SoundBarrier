@@ -15,9 +15,23 @@ public class MainUI : MonoBehaviour
     public LevelTransitionScreen beginning;
     public LevelTransitionScreen end;
     
-
     //Pause layer
     public GameObject pauseLayerScreen;
+    public Animator resumeAnimator;
+    public Animator optionsAnimator;
+    public Animator quitAnimator;
+    public Animator pauseTextAnimator;
+    public Animator cornerPanelAnimator;
+    RectTransform resume;
+    RectTransform options;
+    RectTransform quit;
+    RectTransform pauseText;
+    RectTransform cornerPanel;
+    Vector3 resumeOriginalPosition;
+    Vector3 optionsOriginalPosition;
+    Vector3 quitOriginalPosition;
+    Vector3 pauseTextOriginalPosition;
+    Vector3 cornerPanelOriginalPosition;
 
     //settings menu
     public GameObject settingsMenu;
@@ -26,7 +40,6 @@ public class MainUI : MonoBehaviour
     public Slider mouseSensitivitySlider;
     //required for these sliders' control
     //AudioManager aud;
-
     //player controller
     PlayerController pc;
 
@@ -36,7 +49,9 @@ public class MainUI : MonoBehaviour
     public GameObject crosshair;
     public GameObject promptContainer;
 
+    [HideInInspector] public bool isPaused = false;
 
+    FootstepAudio fAud;
     private void Awake()
     {
         //DontDestroyOnLoad(this.gameObject);
@@ -45,22 +60,35 @@ public class MainUI : MonoBehaviour
         //set them all to halfway exactly.
         musicVolumeSlider.normalizedValue = PlayerPrefs.GetFloat("musicSliderValue", 0.5f);
         sfxVolumeSlider.normalizedValue = PlayerPrefs.GetFloat("sfxSliderValue", 0.5f);
-        mouseSensitivitySlider.normalizedValue = PlayerPrefs.GetFloat("MouseSensitivity", 0.5f);
+        mouseSensitivitySlider.normalizedValue = PlayerPrefs.GetFloat("MSSliderValue", 0.5f);
+
         mouseSensitivitySlider.onValueChanged.AddListener(delegate { ChangeMouseSensitivity(); });
         musicVolumeSlider.onValueChanged.AddListener(delegate { ChangeMusicVolume(); });
         sfxVolumeSlider.onValueChanged.AddListener(delegate { ChangeSFXVolume(); });
     }
-
-    void Start()
-    {
-       
-    }
-
     private void OnEnable()
     {
-        
         pc = GameObject.Find("Player").GetComponent<PlayerController>();
-     
+        fAud = pc.GetComponent<FootstepAudio>();
+    }
+
+    private void Start()
+    {
+        resume = resumeAnimator.gameObject.GetComponent<RectTransform>();
+        options = optionsAnimator.gameObject.GetComponent<RectTransform>();
+        quit = quitAnimator.gameObject.GetComponent<RectTransform>();
+        pauseText = pauseTextAnimator.gameObject.GetComponent<RectTransform>();
+        cornerPanel = cornerPanelAnimator.gameObject.GetComponent<RectTransform>();
+
+        resumeOriginalPosition = resume.anchoredPosition;
+        optionsOriginalPosition = options.anchoredPosition;
+        quitOriginalPosition = quit.anchoredPosition;
+        pauseTextOriginalPosition = pauseText.anchoredPosition;
+        cornerPanelOriginalPosition = cornerPanel.anchoredPosition;
+
+
+
+
     }
 
     // Update is called once per frame
@@ -94,25 +122,44 @@ public class MainUI : MonoBehaviour
 
     void TogglePauseScreen()
     {
-        //
+        ResetButtonsX();
         pauseLayerScreen.SetActive(!pauseLayerScreen.activeSelf);
         if (pauseLayerScreen.activeSelf)
         {
+            fAud.MuteFeet();
+            AudioManager.singleton.MuteMusic();
+            AudioManager.singleton.PlaySFX("pause");
             Debug.Log("paused!");
             Time.timeScale = 0;
             Cursor.lockState = CursorLockMode.Confined;
             Cursor.visible = true;
             pc.enabled = false;
+            //ButtonSlideInOnPause();
+            
+            StartCoroutine(ButtonSlideInOnPause());
         }
         else
         {
+            AudioManager.singleton.UnmuteMusic();
+            AudioManager.singleton.PlaySFX("unpause");
             Debug.Log("unpaused");
             settingsMenu.SetActive(false);
             pc.enabled = true;
             Cursor.lockState = CursorLockMode.Locked;
             Cursor.visible = false;
+            isPaused = false;
             Time.timeScale = 1;
+            fAud.UnmuteFeet();
         }
+    }
+
+    void ResetButtonsX()
+    {
+        resume.anchoredPosition = resumeOriginalPosition;
+        options.anchoredPosition = optionsOriginalPosition;
+        quit.anchoredPosition = quitOriginalPosition;
+        pauseText.anchoredPosition = pauseTextOriginalPosition;
+        cornerPanel.anchoredPosition = cornerPanelOriginalPosition;
     }
 
     public void ResumeGame()
@@ -122,7 +169,6 @@ public class MainUI : MonoBehaviour
         {
             TogglePauseScreen();
         }
-         
     }
 
     public void OpenSettingsMenu()
@@ -138,7 +184,6 @@ public class MainUI : MonoBehaviour
         {
             SceneManager.LoadScene("MainMenu");
         }
-        
     }
 
     public void ExitSettingsMenu()
@@ -172,7 +217,8 @@ public class MainUI : MonoBehaviour
     void ChangeMouseSensitivity()
     {
         Debug.Log("Setting mouse sensitivity to VALUE " + 150 * (mouseSensitivitySlider.normalizedValue + 0.01f) + ".");
-        PlayerPrefs.SetFloat("MouseSensitivity", mouseSensitivitySlider.normalizedValue);
+        PlayerPrefs.SetFloat("MSSliderValue", mouseSensitivitySlider.normalizedValue);
+        PlayerPrefs.SetFloat("MouseSensitivity", 150 * (mouseSensitivitySlider.normalizedValue + 0.01f));
     }
 
     public void SetFloorNumberText(int _floorNumber)
@@ -185,6 +231,16 @@ public class MainUI : MonoBehaviour
     public void ButtonClickSound()
     {
         AudioManager.singleton.PlaySFX("button-click");
+    }
+
+    IEnumerator ButtonSlideInOnPause()
+    {
+        Debug.Log("SLIDE IN THE BUTTONS");
+        resumeAnimator.SetTrigger("SlideIn");
+        yield return new WaitForSeconds(0.05f);
+        optionsAnimator.SetTrigger("SlideIn");
+        yield return new WaitForSeconds(0.05f);
+        quitAnimator.SetTrigger("SlideIn");
     }
 
 }

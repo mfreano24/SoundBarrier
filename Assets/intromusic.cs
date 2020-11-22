@@ -27,7 +27,7 @@ public class intromusic : MonoBehaviour
             fullDisable = true;
             buttonClick.volume = 0.0f;
             vol.volume = 0.0f;
-            this.gameObject.SetActive(false);
+            Destroy(this.gameObject); //???
         }
     }
 
@@ -37,6 +37,11 @@ public class intromusic : MonoBehaviour
         buttonClick.Play();
     }
 
+
+    public void SetMusicVolume()
+    {
+        vol.volume = PlayerPrefs.GetFloat("musicSliderValue", 0.5f);
+    }
 
 
 

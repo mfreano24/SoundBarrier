@@ -10,6 +10,7 @@ public class ChaseBot : MonoBehaviour
     public PlayerController player;
     public ParticleSystem ps; //muzzle flash particle system.
     public ParticleSystem entranceEffect;
+    public SightlineVisualizer viz;
 
     [Header("Adjustable Values")]
     //distance for which when the bot gets close enough and the player **isn't** cloaked that it starts shooting
@@ -24,6 +25,8 @@ public class ChaseBot : MonoBehaviour
     PlayerHealth pHealth;
     PlayerEffects pEffects;
     NavMeshAgent nav;
+
+    
     //STATES:
     //STATE 0 = "Chase" - the robot will move towards the player slowly. This is equiv. to the patrol phase of the regular enemy AI.
     //STATE 1 = "Attack" - the robot will (whatever Im gonna do with movement) and shoot at the player.
@@ -58,6 +61,7 @@ public class ChaseBot : MonoBehaviour
         pEffects = player.GetComponent<PlayerEffects>();
         pHealth = player.GetComponent<PlayerHealth>();
         aud = GetComponent<ObjectAudio>();
+        viz.CurrentColor = new Color(140f / 255f, 0, 241f / 255f);
     }
 
     private void OnEnable()
@@ -78,7 +82,7 @@ public class ChaseBot : MonoBehaviour
 
     void ChaseUpdate()
     {
-        if (PlayerInRange())
+        if (PlayerInRange() && !pHealth.safe)
         {
             aud.PlaySFX("enemyAlerted");
             state = 1; //switch to shooting state
@@ -89,30 +93,33 @@ public class ChaseBot : MonoBehaviour
             if (resetNavMeshCurrent >= resetNavMeshStep)
             {
                 nav.SetDestination(player.transform.position);
-                if(nav.remainingDistance > 20)
+                if(nav.remainingDistance > 25f)
                 {
-                    nav.speed = 6f;
+                    nav.speed = 10.0f;
                 }
-                else if(nav.remainingDistance > 10)
+                else if(nav.remainingDistance > 20f)
                 {
-                    nav.speed = 4.5f;
+                    nav.speed = 6.5f;
                 }
-                else if(nav.remainingDistance > 2.5)
+                else if(nav.remainingDistance > 10f)
                 {
-                    nav.speed = 3.5f;
+                    nav.speed = 5.5f;
+                }
+                else if(nav.remainingDistance > 2.5f)
+                {
+                    nav.speed = 4.0f;
                 }
                 else
                 {
-                    nav.speed = 2.0f;
+                    nav.speed = 2.5f;
                 }
                 resetNavMeshCurrent = 0.0f;
+                Debug.Log("Distance to player = " + nav.remainingDistance + "\tNav Speed set to " + nav.speed);
             }
             else
             {
                 resetNavMeshCurrent += Time.deltaTime; //adding time in seconds to the reset counter.
             }
-
-
         }
     }
 
@@ -139,7 +146,7 @@ public class ChaseBot : MonoBehaviour
                 changeBackToChaseInProgress = false;
             }
 
-            if (shootGunCurrent >= shootGunStep)
+            if (shootGunCurrent >= shootGunStep && !pHealth.dead)
             {
                 //shoot gun
                 aud.PlaySFX("enemyGun");

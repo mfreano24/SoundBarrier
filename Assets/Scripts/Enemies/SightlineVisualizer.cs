@@ -7,7 +7,7 @@ public class SightlineVisualizer : MonoBehaviour
 {
     //public LineRenderer left;
     //public LineRenderer right;
-    public float FOV = 35f;
+    public float FOV = 30f;
     public LayerMask lm;
     public Renderer domeRenderer;
     public Light robotLight;
@@ -56,36 +56,41 @@ public class SightlineVisualizer : MonoBehaviour
         mc = GetComponent<MeshCollider>();
 
         mc.sharedMesh = viewMesh;
-        //mc.convex = true;
-        //mc.isTrigger = true;
+        mc.convex = true;
+        mc.isTrigger = true; //this is so we dont run through it
 
-
+        mc.enabled = false; //this collider just sucks, it is also unnecessary
+        //meshMaterial = new Material(meshMaterial); //make a copy for each enemy
+        meshMaterial.color = new Color(1, 1, 1, 0.45f); //dynamic mesh color is not working out very well
+        
     }
 
     private void OnDrawGizmos()
     {
         Gizmos.color = Color.green;
         Gizmos.DrawSphere(currentGroundPosition, 0.5f);
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawSphere(domeRenderer.transform.position, 0.5f);
     }
-
 
     void LateUpdate()
     {
+        
         RaycastHit hit;
-        if(Physics.Raycast(transform.position, Vector3.down, out hit, Mathf.Infinity, lm))
+        if(Physics.Raycast(domeRenderer.transform.position, Vector3.down, out hit, Mathf.Infinity, lm))
         {
-            //Debug.DrawRay(transform.position, hit.point - transform.position, Color.white);
             robotBody.defaultY = hit.point.y + 0.5f;
             currentGroundPosition = new Vector3(transform.position.x, hit.point.y, transform.position.z);
             meshY = hit.point.y + 0.1f; //set the mesh's position to the ground below the robot regardless of height.
         }
         else
         {
-            meshY = 0.5f;
+            meshY = transform.position.y;
         }
         //Debug.Log("meshY = " + meshY);
         transform.position = new Vector3(childTransform.position.x, meshY, childTransform.position.z);
         transform.eulerAngles = childTransform.eulerAngles;
+        
         DrawFieldOfView();
     }
 
@@ -134,13 +139,13 @@ public class SightlineVisualizer : MonoBehaviour
                 triangles[i * 3 + 2] = i + 2;
 
             }
-            
         }
 
         viewMesh.Clear();
         viewMesh.vertices = vertices;
         viewMesh.triangles = triangles;
         viewMesh.RecalculateNormals();
+        
 
     }
 

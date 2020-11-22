@@ -46,4 +46,14 @@ public class PlayerEffects : MonoBehaviour
         vig.intensity.value = 0; //reset her!
 
     }
+
+    public IEnumerator FadeToDeath()
+    {
+        for(int i = 0; i < 100; i++)
+        {
+            float n = (float)i;
+            vig.intensity.value = n / 100.0f;
+            yield return new WaitForSeconds(0.05f);
+        }
+    }
 }

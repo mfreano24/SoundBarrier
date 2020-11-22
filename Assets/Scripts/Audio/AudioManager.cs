@@ -83,6 +83,7 @@ public class AudioManager : SingletonDDOL<AudioManager>
             //this may need some testing to ensure it doesn't get caught by the cleanup process.
             Debug.Log("volume = " + volumeSFX);
             currentSourceSFX[sfxName].volume = volumeSFX;
+            currentSourceSFX[sfxName].pitch = 1f;
             currentSourceSFX[sfxName].Play();
         }
         else
@@ -125,6 +126,9 @@ public class AudioManager : SingletonDDOL<AudioManager>
         }
 
     }
+
+    public void MuteMusic() { clipsMusic[currentMusicName].mute = true; }
+    public void UnmuteMusic() { clipsMusic[currentMusicName].mute = false; }
 
 
     public void StopSFX(string sfxName)
@@ -196,6 +200,17 @@ public class AudioManager : SingletonDDOL<AudioManager>
         clipsMusic[newTrack].volume = interval * 20.0f;
         currentMusicName = newTrack; //FIX: set the current music track.
 
+    }
+
+    public IEnumerator HighPassDeathEffect()
+    {
+        AudioHighPassFilter hipass = gameObject.AddComponent<AudioHighPassFilter>();
+        hipass.cutoffFrequency = 1000f;
+        for (int i = 0; i < 100; i++)
+        {
+            hipass.highpassResonanceQ = (float)(i) / 50.0f;
+            yield return new WaitForSeconds(0.05f);
+        }
     }
 
     public void OnSceneLoad(Scene scene, LoadSceneMode mode)

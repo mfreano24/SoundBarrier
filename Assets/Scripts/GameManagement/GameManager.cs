@@ -48,7 +48,6 @@ public class GameManager : MonoBehaviour
             yield return StartCoroutine(LevelInProgress());
             yield return StartCoroutine(LevelEnd());
         }
-        
     }
 
     public IEnumerator LevelStart()

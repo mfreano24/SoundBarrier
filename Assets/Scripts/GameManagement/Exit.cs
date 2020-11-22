@@ -19,10 +19,12 @@ public class Exit : MonoBehaviour
     {
         //PLEASE COMMENT THIS OUT ON BUILDS
         //DEBUG LEVEL SKIPPER
+        /*
         if (Input.GetKeyDown(KeyCode.K))
         {
             endOfLevel();
         }
+        */
     }
 
     private void OnTriggerEnter(Collider other)
@@ -30,6 +32,8 @@ public class Exit : MonoBehaviour
         
         if (other.CompareTag("Player") && !gm.roundOver)
         {
+            other.gameObject.GetComponent<FootstepAudio>().MuteFeet();
+            other.gameObject.GetComponent<PlayerHealth>().ExitImmunity();
             endOfLevel();
         }
     }

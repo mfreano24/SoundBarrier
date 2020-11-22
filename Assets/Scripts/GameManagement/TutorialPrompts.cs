@@ -42,8 +42,10 @@ public class TutorialPrompts : MonoBehaviour
             }
 
 
+
             if (Input.GetMouseButtonDown(1))
             {
+                Debug.Log("Cloak prompt removed.");
                 if (prompts.ContainsKey("CLOAK"))
                 {
                     prompts["CLOAK"].SetTrigger("TutorialDone");

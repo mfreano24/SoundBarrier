@@ -32,7 +32,7 @@ public class LevelTransitionScreen : MonoBehaviour
 
         
 
-        int i = Int32.Parse(SceneNumber) - 1;
+        int i = Int32.Parse(SceneNumber) - 1; //this is my favorite line of code in the whole game. it's so dumb.
         playerMarker.rectTransform.anchoredPosition = new Vector2(206, -274 + (i * 65));
         Debug.Log("SETTING PLAYERMARKER POS TO " + playerMarker.rectTransform.anchoredPosition);
         thisCanvasGroup = GetComponent<CanvasGroup>();
@@ -88,12 +88,13 @@ public class LevelTransitionScreen : MonoBehaviour
         {
             Color panelColor = backingPanel.color;
             Debug.Log("EndOfLevel transition is playing...");
+            FLOOR.text = "Files Acquired.";
             for (int i = 1; i <= 20; i++)
             {
 
                 panelColor.a = i * 0.05f;
                 backingPanel.color = panelColor;
-                //thisCanvasGroup.alpha = i * 0.05f;
+                thisCanvasGroup.alpha = i * 0.05f;
                 yield return new WaitForSeconds(.05f);
             }
         }
@@ -115,7 +116,7 @@ public class LevelTransitionScreen : MonoBehaviour
                 yield return new WaitForSeconds(.025f);
             }
         }
-        else
+        else if(floornum == 8)
         {
             yield return new WaitForSeconds(1.25f);
             floorNumber.text = "";
@@ -130,6 +131,16 @@ public class LevelTransitionScreen : MonoBehaviour
                 }
 
                 playerMarker.rectTransform.anchoredPosition = new Vector2(206, beginningYPos + (0.025f * (i + 1)) * 65); //kind of messy
+                yield return new WaitForSeconds(.025f);
+            }
+        }
+        else
+        {
+            //post rooftop things
+            float beginningYPos = playerMarker.rectTransform.anchoredPosition.y;
+            for (int i = 0; i < 80; i++)
+            {
+                playerMarker.rectTransform.anchoredPosition = new Vector2(206, beginningYPos - (0.1f * (i + 1)) * 65); //kind of messy
                 yield return new WaitForSeconds(.025f);
             }
         }

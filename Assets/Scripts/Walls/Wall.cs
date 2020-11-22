@@ -1,17 +1,10 @@
-﻿using System.Collections;
+﻿using SoundBarrier;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.SceneManagement;
 public class Wall : MonoBehaviour
 {
-
-    /*
-     *  MICHAEL FREANEY
-     * TAGD FALL 2020 GAME JAM
-     * Note: The "clear" wall should be maintained at a scale of (0.999,0.999,0.999) so that the dissolve wall appears to fully cover it.
-     * 
-     * 
-     * 
-     */
     Renderer r;
     Material mat;
 
@@ -22,8 +15,14 @@ public class Wall : MonoBehaviour
     bool activated = false;
 
     bool DEBUG_NoGlass = false;
+
+    int numberofActiveCoroutines = 0;
+    bool wallCoroutineInProgress = false;
+
+    List<Coroutine> runningWallCoroutines;
     private void Start()
     {
+        runningWallCoroutines = new List<Coroutine>();
         clearWall.SetActive(false);
         //not sure if this absolutely needs to be in start or awake
         r = GetComponent<Renderer>();
@@ -40,48 +39,59 @@ public class Wall : MonoBehaviour
 
     public void WallReactionHelper()
     {
-        StopCoroutine("WallReaction"); //why does this just straight up not work
 
         Material wallMat = r.material;
         Debug.Log("Gunshot! " + Time.time);
-        wallMat.SetFloat("Vector1_2F06040B", 0.00f);
+
         if (!activated)
         {
-            Debug.Log("We have not activated the glass wall yet.");
             if (!DEBUG_NoGlass)
             {
-                Debug.Log("Activating glass wall.");
                 clearWall.SetActive(true);
             }
 
             activated = true;
         }
-        else
+        //praying
+        if(runningWallCoroutines.Count > 0)
         {
-            Debug.Log("Wall Already Activated! -=-=-=-=-=-=-=-=-=-=-");
+            foreach(Coroutine e in runningWallCoroutines)
+            {
+                //stop the coroutine
+                StopCoroutine(e);
+            }
+            runningWallCoroutines.Clear();
         }
-        StartCoroutine(WallReaction(wallMat));
+        runningWallCoroutines.Add(StartCoroutine(WallReaction(wallMat)));
     }
 
 
     public IEnumerator WallReaction(Material wallMat)
     {
+        numberofActiveCoroutines++;
+        wallCoroutineInProgress = true;
+        wallMat.SetFloat("Vector1_2F06040B", 0.00f); //put inside the thread??? maybe
         yield return new WaitForSeconds(2.5f);
-        dissolveMidBreak = false;
         float val = 0.01f;
         for (int i = 0; i < 100; i++)
         {
-            if (dissolveMidBreak)
-            {
-                break;
-            }
-            else
-            {
-                yield return new WaitForSeconds(0.02f);
-                wallMat.SetFloat("Vector1_2F06040B", val);
-                val += 0.01f;
-            }
             
+            yield return new WaitForSeconds(0.02f);
+            wallMat.SetFloat("Vector1_2F06040B", val);
+            val += 0.01f;
         }
+        wallCoroutineInProgress = false;
+        numberofActiveCoroutines--;
+        //this should be added to the running coroutine list so that it can be cleared and the wall will wait for 7.5 seconds always.
+        runningWallCoroutines.Add(StartCoroutine(ClearWallDisappear())); //time the clear wall disappearing now
+    }
+
+
+    public IEnumerator ClearWallDisappear()
+    {
+        
+        yield return new WaitForSeconds(7.5f);
+        clearWall.SetActive(false);
+        activated = false;
     }
 }
